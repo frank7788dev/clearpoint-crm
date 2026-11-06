@@ -1164,16 +1164,25 @@ var OBJECTIONS = [
     }
   }
   async function loadAgents(){
-    var all = [], from = 0, size = 1000;
-    while (true){
-      var r = await sb.from("agents").select("*").order("id").range(from, from+size-1);
-      if (r.error) throw r.error;
-      r.data.forEach(function(x){ all.push(fromRow(x)); });
-      setSave("saving","Loading agents… "+nf(all.length));
-      if (r.data.length < size) break;
-      from += size;
-      if (all.length===size*3){ S.list = all.slice(); S.examples = false; render(); }
+    var size = 1000;
+    var head = await sb.from("agents").select("id", {count:"exact", head:true});
+    if (head.error) throw head.error;
+    var total = head.count || 0, pages = Math.ceil(total/size), parts = new Array(pages), done = 0;
+    async function page(i){
+      for (var tries=0; tries<3; tries++){
+        var r = await sb.from("agents").select("*").order("id").range(i*size, i*size+size-1);
+        if (!r.error){ parts[i] = r.data.map(fromRow); done += r.data.length; setSave("saving","Loading agents… "+nf(done)+" of "+nf(total)); return; }
+        if (tries===2) throw r.error;
+        await new Promise(function(res){ setTimeout(res, 800*(tries+1)); });
+      }
     }
+    var next = 0;
+    async function worker(){ while (next < pages){ var i = next++; await page(i); } }
+    var workers = []; for (var w=0; w<Math.min(8,pages); w++) workers.push(worker());
+    await Promise.all(workers);
+    var all = []; parts.forEach(function(p){ if (p) for (var k=0;k<p.length;k++) all.push(p[k]); });
+    /* rows added while we were loading */
+    if (all.length < total) { /* nothing: counts can drift slightly while teammates import */ }
     return all;
   }
   async function startData(){
