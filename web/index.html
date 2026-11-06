@@ -1253,11 +1253,30 @@ var OBJECTIONS = [
         var row = ev.new; if (!row || Store.dirty[row.id]) return;
         if (row.updated_by === S.me.id) return;
         var p = byId(row.id), fresh = fromRow(row);
+        alertChange(p, fresh);
         if (p){ Object.keys(fresh).forEach(function(k){ p[k] = fresh[k]; }); touch(p); delete Acts.cache[p.id]; }
         else { if (S.examples){ S.list = []; S.examples = false; } S.list.push(fresh); }
         softRefresh();
       })
       .subscribe();
+  }
+  /* desktop notifications: replies, booked calls and new recruits pop up even when the app is in the background */
+  function notifyOn(){ try { if (window.Notification && Notification.permission==="default") Notification.requestPermission(); } catch(e){} }
+  function alertChange(p, fresh){
+    if (!fresh || (p && p.status===fresh.status && !!p.waiting===!!fresh.waiting)) return;
+    var name = C.displayName(fresh), lt = fresh.lastTouch || {}, msg = null;
+    if (fresh.status==="booked" && (!p || p.status!=="booked")) msg = ["📅 Call booked: "+name, (lt.what||"Booked a call on your calendar")+(fresh.fu ? " · "+fresh.fu : "")];
+    else if (fresh.status==="joined" && (!p || p.status!=="joined")) msg = ["🎉 "+name+" joined", "New recruit on the team"];
+    else if (fresh.waiting && (!p || !p.waiting)) msg = ["💬 "+name+" replied", lt.body || lt.what || "Waiting on you"];
+    else if (fresh.status==="replied" && (!p || p.status!=="replied")) msg = ["💬 "+name+" replied", lt.what || "Booking link sent automatically"];
+    if (!msg) return;
+    toast(msg[0]);
+    try {
+      if (window.Notification && Notification.permission==="granted"){
+        var n = new Notification(msg[0], {body:String(msg[1]).slice(0,160), tag:"agent-"+fresh.id});
+        n.onclick = function(){ window.focus(); openDrawer(fresh.id); };
+      }
+    } catch(e){}
   }
   var softT;
   function softRefresh(){ clearTimeout(softT); softT = setTimeout(function(){ refreshBadges(); if (S.view!=="outreach" && !document.activeElement.closest(".drawer")) renderView(true); if (S.openId) renderDrawer(); }, 400); }
@@ -1354,6 +1373,7 @@ var OBJECTIONS = [
       return;
     }
     $("#gate").hidden = true;
+    notifyOn();
     renderMe();
     startData();
   }
