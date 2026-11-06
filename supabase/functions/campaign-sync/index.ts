@@ -11,7 +11,8 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 const ALLOWED = ["fadybashir@clearpointglobal.org"];
 const STATUS: Record<string, string> = { replied: "replied", booked: "booked", optout: "dnc" };
 const ORDER = ["new", "contacted", "replied", "booked", "contracting", "joined"];
-const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { "Content-Type": "application/json" } });
+const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info", "Access-Control-Allow-Methods": "POST, OPTIONS" };
+const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { "Content-Type": "application/json", ...CORS } });
 
 const DOCS: Record<string, string> = {
   signed: "Signed contracting paperwork",
@@ -57,7 +58,8 @@ async function portal(p: any) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method !== "POST") return new Response("ok");
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  if (req.method !== "POST") return new Response("ok", { headers: CORS });
   // deno-lint-ignore no-explicit-any
   let p: any;
   try { p = await req.json(); } catch { return json({ error: "bad json" }, 400); }
