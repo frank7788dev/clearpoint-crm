@@ -1695,7 +1695,7 @@ var OBJECTIONS = [
     wrap.appendChild(acts3);
     if (isLead()) wrap.appendChild(h("div",{class:"grid2"}, callsCard(), isOwner() ? campaignCard() : goalsCard()));
     if (isOwner()) wrap.appendChild(goalsCard());
-    else if (!isLead() && goalOf(S.me.id)) wrap.appendChild(goalsCard());
+    else if (S.me && !isLead() && goalOf(S.me.id)) wrap.appendChild(goalsCard());
     if (isOwner()) wrap.appendChild(gettingStarted());
     wrap.appendChild(scopeBar());
     var k = [
