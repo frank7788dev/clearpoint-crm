@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Welcome to ClearPoint Global</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#14284b;--ink:#0c0f16;--ink2:#3c4352;--ink3:#7a8191;--line:#e3e0d7;--bg:#f6f4ee;--surface:#fffefb;--gold:#a8823a;--goldsoft:#f4ecdb;--good:#2f6a4e;--bad:#8f2430}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.55 Inter,system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+.top{background:linear-gradient(160deg,#1b2f55,#0f1c36);color:#f6f4ee;padding:42px 20px 64px;text-align:center}
+.crest{display:inline-grid;place-items:center;min-width:78px;height:58px;padding:0 12px;border:1px solid #f6f4ee;box-shadow:inset 0 0 0 4px #14284b,inset 0 0 0 5px rgba(246,244,238,.6);font:600 21px Cormorant Garamond,serif;letter-spacing:.12em}
+h1{font:600 34px/1.15 Cormorant Garamond,serif;margin:18px 0 6px}
+.sub{color:#c9d2e3;font-size:14px;max-width:520px;margin:0 auto}
+.wrap{max-width:640px;margin:-40px auto 40px;padding:0 16px}
+.card{background:var(--surface);border:1px solid var(--line);box-shadow:0 18px 50px rgba(12,15,22,.08);padding:22px}
+.item{display:flex;gap:14px;align-items:center;padding:16px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.ck{width:30px;height:30px;flex:none;display:grid;place-items:center;border:1px solid var(--line);font-weight:700;color:var(--ink3)}
+.item.done .ck{background:var(--goldsoft);border-color:var(--gold);color:var(--gold)}
+.item .t{flex:1;min-width:0} .item .t b{display:block} .item .t small{color:var(--ink3);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn{all:unset;cursor:pointer;padding:9px 14px;border:1px solid var(--navy);color:var(--navy);font-weight:600;font-size:13px;white-space:nowrap}
+.btn.primary{background:var(--navy);color:#fff}
+.btn[aria-disabled=true]{opacity:.5;pointer-events:none}
+input[type=file]{position:absolute;width:1px;height:1px;opacity:0}
+.note{color:var(--ink3);font-size:12.5px;margin-top:14px}
+.msg{padding:12px 14px;border:1px solid var(--line);background:var(--goldsoft);margin-bottom:14px;font-size:14px}
+.msg.err{background:#fbecee;border-color:#e7c3c8;color:var(--bad)}
+.bar{height:4px;background:#ece9e0;margin:4px 0 8px}.bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .8s}
+footer{text-align:center;color:var(--ink3);font-size:12px;margin:24px 0}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="crest">CPG</div>
+  <h1 id="hi">Welcome to ClearPoint Global</h1>
+  <p class="sub" id="lead">Upload your onboarding documents below so we can get you contracted and writing business fast.</p>
+</div>
+<div class="wrap">
+  <div class="card">
+    <div id="msg"></div>
+    <div class="bar"><i id="bar"></i></div>
+    <div id="list"><p class="note">Loading…</p></div>
+    <p class="note">PDF, photo or Word file, up to 15 MB each. Your files go privately to ClearPoint Global and are never shared. Please don't upload bank details or your Social Security number here.</p>
+  </div>
+  <footer>ClearPoint Global · Frank B. · (248) 805-2855</footer>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script>
+(function(){
+  var CFG = window.CRM_CONFIG || {}, token = new URLSearchParams(location.search).get("t") || "";
+  var FN = CFG.url + "/functions/v1/campaign-sync";
+  var sb = window.supabase.createClient(CFG.url, CFG.key, {auth:{persistSession:false}});
+  var $ = function(id){ return document.getElementById(id); };
+  function msg(t, err){ $("msg").innerHTML = ""; if (!t) return; var d = document.createElement("div"); d.className = "msg"+(err?" err":""); d.textContent = t; $("msg").appendChild(d); }
+  async function call(body){
+    body.token = token;
+    var r = await fetch(FN, {method:"POST", headers:{"Content-Type":"application/json", "Authorization":"Bearer "+CFG.key, "apikey":CFG.key}, body:JSON.stringify(body)});
+    var j = {}; try { j = await r.json(); } catch(e){}
+    if (!r.ok) throw new Error(j.error || "Something went wrong. Please try again.");
+    return j;
+  }
+  function el(tag, cls, text){ var e = document.createElement(tag); if (cls) e.className = cls; if (text!=null) e.textContent = text; return e; }
+  async function load(){
+    try {
+      var d = await call({event:"portal_get"});
+      if (d.first){ $("hi").textContent = "Welcome to the team, " + d.first + "!"; }
+      var done = {}; (d.docs||[]).forEach(function(x){ (done[x.item] = done[x.item] || []).push(x); });
+      var list = $("list"); list.innerHTML = "";
+      var need = d.items.filter(function(x){ return x.key!=="other"; }), got = need.filter(function(x){ return done[x.key]; }).length;
+      $("bar").style.width = (need.length ? got/need.length*100 : 0) + "%";
+      if (got===need.length) msg("All set! Everything we need is uploaded. Frank will be in touch with next steps.");
+      d.items.forEach(function(it){
+        var files = done[it.key] || [], row = el("div", "item"+(files.length?" done":""));
+        row.appendChild(el("div","ck", files.length ? "✓" : ""));
+        var t = el("div","t"); t.appendChild(el("b",null,it.label)); t.appendChild(el("small",null, files.length ? "Uploaded: "+files.map(function(f){ return f.name; }).join(", ") : (it.key==="other" ? "Optional" : "Not uploaded yet")));
+        row.appendChild(t);
+        var lab = el("label","btn"+(files.length?"":" primary"), files.length ? "Upload again" : "Upload");
+        var inp = document.createElement("input"); inp.type = "file"; inp.accept = ".pdf,.png,.jpg,.jpeg,.heic,.doc,.docx";
+        inp.addEventListener("change", function(){ if (inp.files[0]) upload(it, inp.files[0], lab); });
+        lab.appendChild(inp); row.appendChild(lab);
+        list.appendChild(row);
+      });
+    } catch(e){ $("list").innerHTML = ""; msg(e.message, true); $("bar").style.width = "0"; }
+  }
+  async function upload(it, file, lab){
+    if (file.size > 15*1024*1024){ msg("That file is over 15 MB. Try a smaller PDF or photo.", true); return; }
+    lab.setAttribute("aria-disabled","true"); lab.firstChild.textContent = "Uploading…";
+    try {
+      var u = await call({event:"portal_upload", item:it.key, name:file.name});
+      var up = await sb.storage.from("recruit-docs").uploadToSignedUrl(u.path, u.token, file, {contentType:file.type||"application/octet-stream"});
+      if (up.error) throw up.error;
+      await call({event:"portal_done", item:it.key, path:u.path, name:file.name});
+      msg("Got it: " + it.label + " uploaded.");
+      load();
+    } catch(e){ msg("Upload didn't go through: " + (e.message||e), true); lab.removeAttribute("aria-disabled"); lab.firstChild.textContent = "Upload"; }
+  }
+  if (!token){ $("list").innerHTML = ""; msg("This link is missing its code. Ask Frank to send it again.", true); } else load();
+})();
+</script>
+</body>
+</html>

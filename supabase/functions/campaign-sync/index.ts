@@ -13,11 +13,55 @@ const STATUS: Record<string, string> = { replied: "replied", booked: "booked", o
 const ORDER = ["new", "contacted", "replied", "booked", "contracting", "joined"];
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { "Content-Type": "application/json" } });
 
+const DOCS: Record<string, string> = {
+  signed: "Signed contracting paperwork",
+  eo: "E&O insurance certificate",
+  aml: "AML training certificate",
+  license: "Resident insurance license",
+  other: "Anything else (optional)",
+};
+const admin = () => createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+// Recruit welcome portal: a new recruit opens their private link and uploads documents.
+// deno-lint-ignore no-explicit-any
+async function portal(p: any) {
+  const sb = admin();
+  const token = String(p.token || "");
+  if (!/^[0-9a-f-]{36}$/i.test(token)) return json({ error: "This link isn't valid." }, 404);
+  const { data: pt } = await sb.from("portals").select("agent_id").eq("token", token).maybeSingle();
+  if (!pt) return json({ error: "This link isn't valid anymore. Ask Frank for a new one." }, 404);
+  const { data: ag } = await sb.from("agents").select("id,first,last").eq("id", pt.agent_id).maybeSingle();
+  if (!ag) return json({ error: "This link isn't valid anymore." }, 404);
+  if (p.event === "portal_get") {
+    const { data: docs } = await sb.from("recruit_docs").select("item,name,at").eq("agent_id", ag.id).order("at");
+    return json({ first: ag.first || "", items: Object.entries(DOCS).map(([k, v]) => ({ key: k, label: v })), docs: docs || [] });
+  }
+  const item = String(p.item || "");
+  if (!DOCS[item]) return json({ error: "Unknown document" }, 400);
+  if (p.event === "portal_upload") {
+    const name = String(p.name || "file").replace(/[^\w.\- ]+/g, "_").slice(-80);
+    const path = ag.id + "/" + item + "-" + Date.now() + "-" + name;
+    const { data, error } = await sb.storage.from("recruit-docs").createSignedUploadUrl(path);
+    if (error) return json({ error: error.message }, 500);
+    return json({ path, token: data.token });
+  }
+  if (p.event === "portal_done") {
+    const path = String(p.path || "");
+    if (!path.startsWith(ag.id + "/" + item + "-")) return json({ error: "bad path" }, 400);
+    const name = String(p.name || "").slice(0, 120);
+    await sb.from("recruit_docs").insert({ agent_id: ag.id, item, path, name });
+    await sb.from("activities").insert({ agent_id: ag.id, user_id: null, ch: "note", dir: "note", what: "Uploaded: " + DOCS[item], body: name, at: new Date().toISOString() });
+    return json({ ok: true });
+  }
+  return json({ error: "unknown" }, 400);
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("ok");
   // deno-lint-ignore no-explicit-any
   let p: any;
   try { p = await req.json(); } catch { return json({ error: "bad json" }, 400); }
+  if (String(p.event || "").startsWith("portal_")) return portal(p);
   const idToken = String(req.headers.get("x-google-id-token") || p.id_token || "");
   if (!idToken) return json({ error: "forbidden", why: "no Google token" }, 403);
   let info: Record<string, unknown> | null = null, why = "";
@@ -67,7 +111,9 @@ Deno.serve(async (req) => {
     // anything stuck "sending" for 30+ minutes failed in the middle: report it rather than risk a double send
     await sb.from("outbox").update({ status: "error", error: "Sending was interrupted. Check Sent mail before trying again." }).eq("status", "sending").lt("created_at", new Date(Date.now() - 30 * 6e4).toISOString());
     if (!limit) return json({ items: [] });
-    const { data, error } = await sb.from("outbox").select("id,agent_id,to_email,subject,body,kind").eq("status", "queued").lte("scheduled_for", now).order("scheduled_for").limit(limit);
+    let q = sb.from("outbox").select("id,agent_id,to_email,subject,body,kind,reply_thread").eq("status", "queued").lte("scheduled_for", now);
+    if (p.only_single) q = q.neq("kind", "batch");
+    const { data, error } = await q.order("scheduled_for").limit(limit);
     if (error) return json({ error: error.message }, 500);
     let items = data || [];
     // batch first-emails: skip anyone who was contacted, replied or opted out since it was scheduled
@@ -105,6 +151,27 @@ Deno.serve(async (req) => {
     return json({ ok: true });
   }
 
+  if (event === "digest") {
+    const day = new Date(Date.now() - 864e5).toISOString(), today = now.slice(0, 10);
+    const c = async (q: any) => { const r = await q; return r.count || 0; };
+    const waiting = await c(sb.from("agents").select("id", { count: "exact", head: true }).eq("waiting", true));
+    const due = await c(sb.from("agents").select("id", { count: "exact", head: true }).neq("fu", "").lte("fu", today).neq("status", "dnc").eq("waiting", false));
+    const replies = await c(sb.from("activities").select("id", { count: "exact", head: true }).eq("dir", "in").gte("at", day));
+    const booked = await c(sb.from("activities").select("id", { count: "exact", head: true }).like("what", "Call booked%").gte("at", day));
+    const sent = await c(sb.from("outbox").select("id", { count: "exact", head: true }).eq("status", "sent").gte("sent_at", day));
+    const uploads = await c(sb.from("recruit_docs").select("id", { count: "exact", head: true }).gte("at", day));
+    const { data: wl } = await sb.from("agents").select("first,last,last_touch").eq("waiting", true).order("updated_at", { ascending: false }).limit(8);
+    const { data: rec } = await sb.from("agents").select("first,last,extra").in("status", ["contracting", "joined"]).limit(2000);
+    const soon = Date.now() + 60 * 864e5, alerts: string[] = [];
+    (rec || []).forEach((a) => {
+      const x = a.extra || {}, nm = ((a.first || "") + " " + (a.last || "")).trim();
+      if (x.licExp && Date.parse(x.licExp) <= soon) alerts.push(nm + ": license expires " + x.licExp);
+      if (x.ceDue && Date.parse(x.ceDue) <= soon) alerts.push(nm + ": CE due " + x.ceDue);
+    });
+    return json({ waiting, due, replies, booked, sent, uploads, alerts,
+      waitingList: (wl || []).map((a) => ({ name: ((a.first || "") + " " + (a.last || "")).trim(), said: String((a.last_touch || {}).body || "").slice(0, 120) })) });
+  }
+
   if (event === "threads") {
     const since = new Date(Date.now() - 45 * 864e5).toISOString();
     const { data } = await sb.from("outbox").select("thread_id,to_email,agent_id").eq("status", "sent").gte("sent_at", since).neq("thread_id", "").limit(2000);
@@ -130,7 +197,7 @@ Deno.serve(async (req) => {
   const body = String(p.body || "").slice(0, 2000);
   for (const r of rows) {
     const patch: Record<string, unknown> = {
-      last_touch: { at: now, ch: "email", dir: event === "booked" ? "note" : "in", what, body: body.slice(0, 240) },
+      last_touch: { at: now, ch: "email", dir: event === "booked" ? "note" : "in", what, body: body.slice(0, 240), thread: String(p.thread || "") },
     };
     const next = STATUS[event];
     if (next === "dnc" || ORDER.indexOf(next) > ORDER.indexOf(r.status)) patch.status = next;
