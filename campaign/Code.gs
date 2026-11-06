@@ -267,12 +267,23 @@ function pushStats() {
 
 // Emails you write in the CRM ("Send now") go out from this business mailbox within 5 minutes.
 function sendOutbox() {
-  const res = crm({ event: 'outbox_pull', limit: Math.min(20, MailApp.getRemainingDailyQuota() - 5) });
+  const res = crm({ event: 'outbox_pull', limit: Math.min(25, MailApp.getRemainingDailyQuota() - 5) });
   const items = (res && res.items) || [];
   if (!items.length) return;
+  // never double-email someone the Sheet campaign already wrote to
+  const inSheet = {};
+  batchSheets().forEach(function (sh) {
+    const d = sh.getDataRange().getValues(), H = d[0], iE = H.indexOf('Email'), iS = H.indexOf('Step'), iSt = H.indexOf('Status');
+    for (let r = 1; r < d.length; r++) inSheet[String(d[r][iE]).trim().toLowerCase()] = { sh: sh, r: r + 1, col: iSt + 1, step: +d[r][iS] || 0, status: String(d[r][iSt]) };
+  });
   const results = items.map(function (it) {
-    try { return { id: it.id, ok: true, thread: sendTracked(it.to_email, it.subject || '(no subject)', it.body || '') }; }
-    catch (e) { return { id: it.id, ok: false, error: String(e.message || e) }; }
+    const row = inSheet[String(it.to_email).trim().toLowerCase()];
+    if (it.kind === 'batch' && row && row.step > 0) return { id: it.id, ok: false, error: 'Skipped: already emailed by the campaign' };
+    try {
+      const thread = sendTracked(it.to_email, it.subject || '(no subject)', it.body || '');
+      if (row && row.step === 0 && row.status === 'Queued') row.sh.getRange(row.r, row.col).setValue('Skipped (emailed from CRM)');
+      return { id: it.id, ok: true, thread: thread };
+    } catch (e) { return { id: it.id, ok: false, error: String(e.message || e) }; }
   });
   crm({ event: 'outbox_done', results: results });
 }

@@ -58,13 +58,22 @@ Deno.serve(async (req) => {
   }
 
   if (event === "outbox_pull") {
-    const limit = Math.max(0, Math.min(25, Number(p.limit) || 10));
+    const limit = Math.max(0, Math.min(30, Number(p.limit) || 10));
     // anything stuck "sending" for 30+ minutes failed in the middle: report it rather than risk a double send
     await sb.from("outbox").update({ status: "error", error: "Sending was interrupted. Check Sent mail before trying again." }).eq("status", "sending").lt("created_at", new Date(Date.now() - 30 * 6e4).toISOString());
     if (!limit) return json({ items: [] });
-    const { data, error } = await sb.from("outbox").select("id,agent_id,to_email,subject,body").eq("status", "queued").order("created_at").limit(limit);
+    const { data, error } = await sb.from("outbox").select("id,agent_id,to_email,subject,body,kind").eq("status", "queued").lte("scheduled_for", now).order("scheduled_for").limit(limit);
     if (error) return json({ error: error.message }, 500);
-    const items = data || [];
+    let items = data || [];
+    // batch first-emails: skip anyone who was contacted, replied or opted out since it was scheduled
+    const batchIds = items.filter((x) => x.kind === "batch" && x.agent_id).map((x) => x.agent_id);
+    if (batchIds.length) {
+      const { data: ags } = await sb.from("agents").select("id,status").in("id", batchIds);
+      const st: Record<string, string> = {}; (ags || []).forEach((a) => { st[a.id] = a.status; });
+      const skip = items.filter((x) => x.kind === "batch" && x.agent_id && st[x.agent_id] && st[x.agent_id] !== "new").map((x) => x.id);
+      if (skip.length) await sb.from("outbox").update({ status: "error", error: "Skipped: already contacted" }).in("id", skip);
+      items = items.filter((x) => skip.indexOf(x.id) < 0);
+    }
     if (items.length) await sb.from("outbox").update({ status: "sending" }).in("id", items.map((x) => x.id));
     return json({ items });
   }

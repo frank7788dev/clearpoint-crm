@@ -609,6 +609,16 @@ button.plain{all:unset;cursor:pointer} button.plain.x{padding:0 6px;color:var(--
 .kitem[aria-selected="true"]{background:var(--surface-2);box-shadow:inset 3px 0 0 var(--gold)}
 .kitem .k1{font-weight:700} .kitem .k2{font-size:12px;color:var(--ink-3)} .kitem kbd{margin-left:auto;font-size:11px;color:var(--ink-3)}
 .khint{padding:8px 14px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3)}
+.autosend .arow{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.autosend .arow .lbl{min-width:120px} .autosend .arow select{min-width:170px}
+.autosend .aready{display:flex;flex-direction:column;padding:0 8px;margin-left:auto} .autosend .aready b{font:600 26px/1 var(--display)} .autosend .aready span{font-size:11.5px;color:var(--ink-3)}
+.autosend .arow2{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--line)}
+.switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.switch .sl{width:40px;height:22px;border-radius:22px;background:var(--line-2,#cfd5df);position:relative;transition:background .2s}
+.switch .sl:after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s var(--ease)}
+.switch input:checked + .sl{background:var(--gold)} .switch input:checked + .sl:after{transform:translateX(18px)}
+.switch input:focus-visible + .sl{outline:2px solid var(--accent);outline-offset:2px}
 @media (max-width:900px){ .grow-row{grid-template-columns:1fr 1fr 1fr} .grow-row .who,.grow-row .gbars{grid-column:1/-1} .onb{grid-template-columns:1fr} .ctiles{grid-template-columns:repeat(2,1fr)} .gbar{grid-template-columns:96px 1fr 70px} }
 </style>
 </head>
@@ -1287,13 +1297,13 @@ var OBJECTIONS = [
     setSave("saving","Loading…");
     try {
       var org = await sb.from("org_settings").select("*").eq("id",1).maybeSingle();
-      if (org.data){ S.campaign = org.data.campaign || null; S.goals = org.data.goals || {}; }
+      if (org.data){ S.campaign = org.data.campaign || null; S.goals = org.data.goals || {}; S.autosend = org.data.autosend || {}; }
       S.views = Array.isArray(S.me.views) ? S.me.views : [];
       if (org.data){ S.territories = org.data.territories || {}; if (org.data.scripts && org.data.scripts.tracks) S.scripts = org.data.scripts; S.settings.agency = org.data.agency || "ClearPoint Global"; }
       var me = S.me;
       S.settings.myName = me.sign_name || (me.role==="owner" ? "Frank B." : (me.full_name||""));
       S.settings.myPhone = me.phone || (me.role==="owner" ? "(248) 805-2855" : "");
-      S.settings.myEmail = me.email; S.settings.calendar = me.calendar||""; S.settings.optin = me.optin||"";
+      S.settings.myEmail = me.email; S.settings.calendar = me.calendar || (me.role==="owner" ? BOOKING_URL : ""); S.settings.optin = me.optin||"";
       await loadTeam();
       loadCalls();
       var vw = $("#view"); vw.textContent = ""; vw.appendChild(h("div",{class:"kpis"}, [0,1,2,3,4,5].map(function(i){ return h("div",{class:"skel",style:"animation-delay:"+(i*80)+"ms"}); })));
@@ -1304,6 +1314,7 @@ var OBJECTIONS = [
       setSave("saved", nf(S.examples ? 0 : S.list.length)+" agents · up to date");
       render();
       live();
+      if (isOwner()){ await loadPending(); autoTopUp(); }
     } catch(e){
       setSave("error","Couldn't load");
       localBanner("Your agents couldn't be loaded ("+(e && e.message || "error")+"). Check your internet connection and reopen the app.");
@@ -2005,6 +2016,7 @@ var OBJECTIONS = [
         h("b",{class:"num"}, nf(cnt[t[0]])), h("span",null, t[1]), h("small",null, t[2])));
     });
     wrap.appendChild(tabs);
+    if (isOwner() && O.stage==="new" && Store.ready && !S.examples) wrap.appendChild(autoCard());
     var chSeg = h("div",{class:"seg",role:"group","aria-label":"Send by"});
     ["Email","Text"].forEach(function(c){ chSeg.appendChild(h("button",{type:"button","aria-pressed":O.ch===c?"true":"false",onclick:function(){ O.ch = c; O.cur = null; O.forId = null; renderView(true); }}, c)); });
     var segSeg = h("div",{class:"seg",role:"group","aria-label":"Experience"});
@@ -2032,6 +2044,122 @@ var OBJECTIONS = [
     else right = composerCard(p);
     wrap.appendChild(h("div",{class:"outreach"}, left, right));
     return wrap;
+  }
+  /* ================= AUTO-SEND (batches from the business email) ================= */
+  S.autosend = {}; S.pend = {}; S.pendDays = {};
+  async function loadPending(){
+    if (!isOwner()) return;
+    var all = [], from = 0;
+    while (true){
+      var r = await sb.from("outbox").select("agent_id,scheduled_for,status").in("status",["queued","sending"]).range(from, from+999);
+      if (r.error) break; all = all.concat(r.data||[]); if (!r.data || r.data.length<1000) break; from += 1000;
+    }
+    S.pend = {}; S.pendDays = {};
+    all.forEach(function(x){ if (x.agent_id) S.pend[x.agent_id] = 1; var d = dayKey(new Date(x.scheduled_for)); S.pendDays[d] = (S.pendDays[d]||0)+1; });
+    if (S.view==="outreach") renderView(true);
+  }
+  function autoPool(cfg){
+    cfg = cfg || {};
+    return S.list.filter(function(p){
+      if (p.ex || p.status!=="new" || !p.email || S.pend[p.id] || p.status==="dnc") return false;
+      if (cfg.state && p.state!==cfg.state) return false;
+      var d = D(p);
+      if (cfg.seg==="2plus" && !(d.yrs!=null && d.yrs>=2)) return false;
+      if (cfg.seg==="rookie" && d.track!=="rookie") return false;
+      if (p.assigned && p.assigned!==S.me.id) return false;
+      return true;
+    }).sort(function(a,b){ return D(b).score-D(a).score; });
+  }
+  function firstEmail(p){
+    var tpls = getTpls(D(p).track), t = null;
+    for (var i=0;i<tpls.length;i++) if (tpls[i].ch==="Email"){ t = tpls[i]; break; }
+    if (!t) return null;
+    var tk = tokens(p);
+    return {subject:fill(t.subject, tk), body:fill(t.body, tk)};
+  }
+  async function queueBatch(people, start, gapSec){
+    var rows = [], bad = null;
+    people.forEach(function(p, i){
+      var m = firstEmail(p); if (!m) return;
+      var miss = /\[([a-z][^\]]{1,30})\]/i.exec(m.subject+" "+m.body); if (miss){ bad = miss[1]; return; }
+      rows.push({agent_id:p.id, to_email:p.email, subject:m.subject, body:m.body, kind:"batch", created_by:S.me.id, scheduled_for:new Date(start.getTime()+i*gapSec*1000).toISOString()});
+    });
+    if (bad && !rows.length){ toast("Your email template still has [" + bad + "] in it. Fill that in on the Settings page first."); return 0; }
+    for (var i=0;i<rows.length;i+=500){ var r = await sb.from("outbox").insert(rows.slice(i,i+500)); if (r.error){ toast(dbMsg(r.error)); return i; } }
+    rows.forEach(function(x){ S.pend[x.agent_id] = 1; var d = dayKey(new Date(x.scheduled_for)); S.pendDays[d] = (S.pendDays[d]||0)+1; });
+    return rows.length;
+  }
+  function saveAutosend(){ return sb.from("org_settings").update({autosend:S.autosend, updated_at:new Date().toISOString()}).eq("id",1).then(function(r){ if (r.error) toast(dbMsg(r.error)); }); }
+  async function sendBatchNow(cfg){
+    var n = Math.max(1, Math.min(500, +cfg.count||100)), pool = autoPool(cfg).slice(0, n);
+    if (!pool.length){ toast("No new agents with an email match these settings."); return; }
+    ask("Send "+nf(pool.length)+" emails now?", "Each agent gets your first email, personalized with their name, from fadybashir@clearpointglobal.org. They go out one every 30 seconds (about "+Math.ceil(pool.length/2)+" minutes), and anyone who replies is handled automatically.", "Send "+nf(pool.length)+" emails", async function(){
+      var k = await queueBatch(pool, new Date(), 30);
+      if (k){ S.autosend.lastNow = todayIso(); saveAutosend(); toast("✓ "+nf(k)+" emails are on their way"); renderView(true); }
+    });
+  }
+  function weekdaysAhead(n){
+    var out = [], d = new Date(); d.setHours(9,0,0,0);
+    var now = new Date();
+    if (d.getDay()>=1 && d.getDay()<=5 && now.getHours()<15 && S.autosend.lastNow!==todayIso()) out.push(new Date(Math.max(d.getTime(), now.getTime()+60000)));
+    var x = new Date(d); 
+    while (out.length<n){ x.setDate(x.getDate()+1); if (x.getDay()>=1 && x.getDay()<=5) out.push(new Date(x)); }
+    return out;
+  }
+  async function autoTopUp(){
+    var a = S.autosend || {};
+    if (!a.on || !isOwner() || !Store.ready || S.examples) return;
+    var filled = a.filled || [], added = 0;
+    var days = weekdaysAhead(5);
+    for (var i=0;i<days.length;i++){
+      var key = dayKey(days[i]); if (filled.indexOf(key)>-1) continue;
+      var pool = autoPool(a).slice(0, Math.max(1, Math.min(500, +a.count||100)));
+      if (!pool.length) break;
+      var gap = Math.max(60, Math.floor((6*3600)/pool.length));   // spread over ~6 hours from 9am
+      added += await queueBatch(pool, days[i], gap);
+      filled.push(key);
+    }
+    S.autosend.filled = filled.slice(-30);
+    if (added){ await saveAutosend(); if (S.view==="outreach") renderView(true); }
+  }
+  async function setAuto(on, cfg){
+    if (on){
+      S.autosend = Object.assign({}, S.autosend, cfg, {on:true, filled:[]});
+      await saveAutosend(); await autoTopUp(); toast("Auto-send is on: "+nf(+cfg.count||100)+" emails every weekday");
+    } else {
+      S.autosend = Object.assign({}, S.autosend, {on:false, filled:[]});
+      await saveAutosend();
+      var r = await sb.from("outbox").delete().eq("status","queued").eq("kind","batch").gt("scheduled_for", new Date(Date.now()+60000).toISOString());
+      if (r.error) toast(dbMsg(r.error)); else toast("Auto-send is off. Scheduled emails were cancelled.");
+      await loadPending();
+    }
+    renderView(true);
+  }
+  function autoCard(){
+    var a = S.autosend || {}, cfg = {state:a.state||"", seg:a.seg||"", count:a.count||100};
+    var states = {}; S.list.forEach(function(p){ if (p.state && p.status==="new" && p.email) states[p.state] = (states[p.state]||0)+1; });
+    var stSel = h("select",{class:"field","aria-label":"State"}, h("option",{value:""},"All states"));
+    Object.keys(states).sort(function(x,y){ return states[y]-states[x]; }).forEach(function(k){ stSel.appendChild(h("option",{value:k}, (C.STATES[k]||k)+" ("+nf(states[k])+")")); });
+    stSel.value = cfg.state;
+    var sgSel = h("select",{class:"field","aria-label":"Experience"}, h("option",{value:""},"Everyone"), h("option",{value:"2plus"},"2+ years licensed"), h("option",{value:"rookie"},"New agents")); sgSel.value = cfg.seg;
+    var cnt = h("input",{class:"field",type:"number",min:"1",max:"500",value:String(cfg.count),"aria-label":"How many emails",style:"width:90px"});
+    var ready = h("b",{class:"num"});
+    function sync(){ cfg = {state:stSel.value, seg:sgSel.value, count:Math.max(1,Math.min(500,parseInt(cnt.value,10)||100))}; ready.textContent = nf(autoPool(cfg).length); }
+    [stSel, sgSel, cnt].forEach(function(e){ e.addEventListener("change", function(){ sync(); if (S.autosend.on){ S.autosend = Object.assign({}, S.autosend, cfg); saveAutosend(); } }); });
+    sync();
+    var sched = Object.keys(S.pendDays).sort(), total = 0; sched.forEach(function(k){ total += S.pendDays[k]; });
+    var tog = h("input",{type:"checkbox",id:"autoOn"}); tog.checked = !!a.on;
+    tog.addEventListener("change", function(){ if (tog.checked) setAuto(true, cfg); else ask("Turn off auto-send?", "This cancels the emails that are scheduled but not sent yet.", "Turn off", function(){ setAuto(false); }); if (!tog.checked) tog.checked = true; });
+    return h("div",{class:"card autosend gold"},
+      h("div",{class:"hd"}, h("h2",null,"Auto-send"), h("span",{class:"note"},"First emails from fadybashir@clearpointglobal.org, personalized for each agent")),
+      h("div",{class:"bd",style:"display:flex;flex-direction:column;gap:14px"},
+        h("div",{class:"arow"}, h("label",{class:"lbl"},"How many", cnt), h("label",{class:"lbl"},"State", stSel), h("label",{class:"lbl"},"Experience", sgSel),
+          h("div",{class:"aready"}, ready, h("span",null,"new agents ready")),
+          h("button",{type:"button",class:"btn primary bigsend",onclick:function(){ sync(); sendBatchNow(cfg); }}, icon("mail"), "Send "+nf(cfg.count)+" now")),
+        h("div",{class:"arow2"},
+          h("label",{class:"switch",for:"autoOn"}, tog, h("span",{class:"sl"}), h("b",null,"Automatic: send "+nf(cfg.count)+" every weekday"), h("span",{class:"note"}," spread out from 9am so they land in inboxes")),
+          h("span",{class:"note",style:"margin-left:auto"}, total ? nf(total)+" scheduled"+(sched[0] ? " · next batch "+(sched[0]===todayIso()?"today":fmtDate(sched[0])) : "") : "Nothing scheduled")),
+        h("div",{class:"note"},"Skips anyone already emailed, by you, your team or the campaign. Replies get your booking link automatically, and opt-outs are never emailed again.")));
   }
   async function sendNow(p, subject, body, done){
     if (!p.email){ toast("No email address for this agent."); return; }
