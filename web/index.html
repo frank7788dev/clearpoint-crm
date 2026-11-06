@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Jost:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
@@ -638,13 +638,161 @@ button.plain{all:unset;cursor:pointer} button.plain.x{padding:0 6px;color:var(--
 .switch input:checked + .sl{background:var(--gold)} .switch input:checked + .sl:after{transform:translateX(18px)}
 .switch input:focus-visible + .sl{outline:2px solid var(--accent);outline-offset:2px}
 @media (max-width:900px){ .grow-row{grid-template-columns:1fr 1fr 1fr} .grow-row .who,.grow-row .gbars{grid-column:1/-1} .onb{grid-template-columns:1fr} .ctiles{grid-template-columns:repeat(2,1fr)} .gbar{grid-template-columns:96px 1fr 70px} }
+
+/* =================== ONYX & GOLD (2026 redesign, built around the CPG crest) ===================
+   Black lacquer and brushed gold, like the logo on the wall: near-black surfaces, warm ivory type,
+   gold for action and wins, Cinzel capitals for headings (the logo's letterforms), Jost for reading. */
+:root{
+  --bg:#0a0a0c; --surface:#131316; --surface-2:#1a1a1e; --ink:#f1ead9; --ink-2:#cbc3b0; --ink-3:#8d877a;
+  --line:#25242a; --line-2:#3b382f;
+  --accent:#c9a55a; --accent-ink:#141210; --accent-soft:rgba(201,165,90,.13); --hot:#e06c62;
+  --good:#7cc29a; --warn:#e0b45a; --bad:#e06c62;
+  --rookie:#86aee0; --exp:#c9a55a; --lead:#efe8d8;
+  --rail:#060607; --rail-ink:#efe8d8; --rail-dim:#8d877a;
+  --gold:#c9a55a; --gold-2:#e9cf8f; --gold-3:#8a6a2c; --gold-soft:rgba(201,165,90,.14);
+  --goldgrad:linear-gradient(135deg,#f3dfa6 0%,#d4b066 28%,#a8822f 55%,#e2c67e 78%,#9b7428 100%);
+  --shadow:0 1px 0 rgba(255,255,255,.02) inset,0 20px 40px -24px rgba(0,0,0,.9);
+  --shadow-lift:0 30px 60px -24px rgba(0,0,0,.95),0 0 0 1px rgba(201,165,90,.25);
+  --display:"Cinzel", "Trajan Pro", Georgia, serif;
+  --body:"Jost", "Helvetica Neue", Arial, system-ui, sans-serif;
+  color-scheme:dark;
+}
+body{font:400 14.5px/1.55 var(--body);color:var(--ink);
+  background:var(--bg) radial-gradient(1200px 600px at 85% -10%, rgba(201,165,90,.07), transparent 60%) fixed,
+             radial-gradient(900px 500px at -10% 110%, rgba(201,165,90,.05), transparent 60%) fixed}
+::selection{background:rgba(201,165,90,.35);color:#fff}
+h1,h2,h3{font-family:var(--display);font-weight:500;letter-spacing:.06em}
+a{color:var(--gold-2)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+::-webkit-scrollbar{width:10px;height:10px} ::-webkit-scrollbar-thumb{background:#2a2830;border-radius:10px;border:2px solid var(--bg)} ::-webkit-scrollbar-track{background:transparent}
+
+/* rail: black lacquer with the gold crest */
+.rail{background:linear-gradient(180deg,#09090b,#050506);border-right:1px solid rgba(201,165,90,.14)}
+.brand{flex-direction:column;align-items:center;text-align:center;gap:10px;padding:6px 4px 22px;border-bottom:1px solid rgba(201,165,90,.16)}
+.brand .crestimg{width:150px;max-width:100%;height:auto;display:block;filter:drop-shadow(0 6px 14px rgba(0,0,0,.7))}
+.brand .bname b{font:500 15.5px/1.1 var(--display);letter-spacing:.18em;color:var(--ink);white-space:nowrap}
+.brand .bname small{display:block;margin-top:7px;font:500 9px/1 var(--body);letter-spacing:.42em;color:var(--gold);text-transform:uppercase}
+.brand .mark{display:none}
+.nav{color:#a29b8c;font-weight:500;letter-spacing:.06em;font-size:13.5px;border-radius:2px}
+.nav svg{color:#6f6a60}
+.nav:hover{background:rgba(201,165,90,.06);color:var(--ink)}
+.nav:hover svg{color:var(--gold)}
+.nav[aria-current="page"]{background:linear-gradient(90deg,rgba(201,165,90,.16),rgba(201,165,90,.02));color:#f7efdc}
+.nav[aria-current="page"] svg{color:var(--gold-2)}
+.nav[aria-current="page"]::before{background:var(--goldgrad);width:2px}
+.nav .badge{background:var(--goldgrad);color:#141210;font-weight:700;border-radius:10px}
+.credits{background:rgba(255,255,255,.02);border-color:rgba(201,165,90,.18)}
+.credits b{font:500 17px/1.1 var(--display);letter-spacing:.06em;color:var(--ink)}
+.credits .btn{border-color:rgba(201,165,90,.35);color:var(--ink)}
+.save{color:var(--rail-dim)}
+
+/* header */
+.top{background:linear-gradient(180deg,rgba(10,10,12,.92),rgba(10,10,12,.75));backdrop-filter:blur(12px);border-bottom:1px solid rgba(201,165,90,.10)}
+#viewTitle{font:500 30px/1 var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
+#viewTitle::after{background:var(--goldgrad)!important}
+.search{background:var(--surface);border:1px solid var(--line);border-radius:2px}
+.search input{color:var(--ink)} .search input::placeholder{color:var(--ink-3)}
+.search kbd{background:transparent;border-color:rgba(201,165,90,.35);color:var(--gold)}
+
+/* cards & surfaces */
+.card,.kpi,.bigact,.ps,.stp,.col,.kcard,.calls .callrow,.ctile,.wtab,.tnode{background:var(--surface);border-color:var(--line);color:var(--ink)}
+.card{border:1px solid var(--line);box-shadow:var(--shadow);border-radius:3px}
+.card .hd{border-color:var(--line)}
+.card .hd h2{font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+.card.gold{box-shadow:var(--shadow),inset 0 1px 0 rgba(233,207,143,.35);border-top:1px solid var(--gold)}
+.kpi .v,.bigact b,.ps b,.ctile b,.aready b,.callrow .ctime b,.credits b{font-family:var(--display);font-weight:500;letter-spacing:.02em;color:var(--ink)}
+.kpi .k,.ps span,.wtab small{letter-spacing:.14em;text-transform:uppercase;font-size:10.5px;color:var(--ink-3)}
+.bigact{border-top:2px solid var(--c)}
+.bigact .t{font-family:var(--display);letter-spacing:.06em}
+.bigact:hover,.kpi:hover,.kcard:hover,.tnode:hover{border-color:rgba(201,165,90,.55);box-shadow:var(--shadow-lift)}
+.empty{color:var(--ink-3);font-family:var(--body);font-style:normal;letter-spacing:.02em}
+.note{color:var(--ink-3)}
+.skel{background:linear-gradient(90deg,#141417,#1e1d22,#141417);background-size:200% 100%}
+
+/* hero: lacquer panel, gold hairline, the crest as a quiet watermark */
+.hero-band{background:#0d0d10 url("brand/cpg-mark.png") no-repeat right 32px center / 230px auto!important;border:1px solid rgba(201,165,90,.28);box-shadow:inset 0 1px 0 rgba(233,207,143,.18),0 30px 60px -30px rgba(0,0,0,.9);color:var(--ink)}
+.hero-band::before,.hero-band::after{opacity:.0}
+.hero-band .eyebrow{color:var(--gold);letter-spacing:.32em}
+.hero-band h2{font:500 34px/1.1 var(--display);letter-spacing:.06em;color:#f7efdc}
+.hero-band .big{color:#cbc3b0;font-family:var(--body);font-style:normal}
+.hero-band > .pills{margin-right:250px}
+.hero-band .pill{background:rgba(0,0,0,.4);border-color:rgba(201,165,90,.4);color:var(--ink)}
+.hero-band .pill.cta{background:var(--goldgrad);color:#141210;border:0;font-weight:700;letter-spacing:.08em}
+
+/* buttons, inputs, pills */
+.btn{background:transparent;border:1px solid var(--line-2);color:var(--ink);border-radius:2px;letter-spacing:.04em}
+.btn:hover{border-color:var(--gold);color:#fff;background:rgba(201,165,90,.06)}
+.btn.primary,.btn.glow{background:var(--goldgrad);background-size:160% 160%;color:#141210;border:0;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:12.5px;box-shadow:0 10px 24px -12px rgba(201,165,90,.6),inset 0 1px 0 rgba(255,255,255,.45)}
+.btn.primary:hover{background-position:100% 0;color:#000}
+.btn.ghost{border-color:transparent;color:var(--ink-2)}
+.btn.danger{border-color:rgba(224,108,98,.5);color:var(--bad)}
+.field,select.field,textarea.field,input.field{background:#0f0f12;border:1px solid var(--line);color:var(--ink);border-radius:2px}
+.field:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,165,90,.15)}
+.field::placeholder{color:#6d685e}
+select.field option{background:#141417;color:var(--ink)}
+.pill,.schip{background:transparent;border-color:var(--line-2);color:var(--ink-2)}
+.pill[aria-pressed="true"],.schip[aria-pressed="true"]{background:var(--goldgrad);border-color:transparent;color:#141210}
+.seg{background:#0f0f12;border:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--goldgrad);color:#141210}
+.chip{background:rgba(255,255,255,.04);border-color:var(--line-2);color:var(--ink-2)}
+.chip.hot{background:rgba(224,108,98,.14);color:#f2a39b;border-color:rgba(224,108,98,.35)}
+.lbl{color:var(--ink-3);letter-spacing:.12em;text-transform:uppercase;font-size:10.5px}
+
+/* tables */
+table{color:var(--ink)}
+thead th{background:#0f0f12;color:var(--gold);letter-spacing:.16em;font-size:10.5px;border-color:var(--line)}
+thead th button{color:var(--gold)}
+tbody tr{border-color:var(--line)} tbody td{border-color:var(--line)}
+tbody tr:hover{background:rgba(201,165,90,.05)}
+tr.sel,tr.open{background:rgba(201,165,90,.09)!important}
+.score .sb{background:#24232a} .score .sb i{background:var(--goldgrad)}
+.progress{background:#24232a} .progress i{background:var(--goldgrad)}
+.bar,.ftrack,.strack{background:#1d1c21}
+
+/* work queue + composer + drawer */
+.qitem{border-color:var(--line);color:var(--ink)} .qitem:hover{background:rgba(201,165,90,.05)}
+.qitem[aria-current="true"]{background:rgba(201,165,90,.1);box-shadow:inset 2px 0 0 var(--gold)}
+.composer .who2{background:#0d0d10;color:var(--ink);border-bottom:1px solid rgba(201,165,90,.25)}
+.composer .who2 h2{color:#f7efdc}
+.wtab[aria-selected="true"]{background:#0d0d10;border-color:var(--gold);box-shadow:inset 0 2px 0 var(--gold)}
+.wtab[aria-selected="true"] b,.wtab[aria-selected="true"] span{color:#f7efdc}
+.drawer{background:#0d0d10;border-left:1px solid rgba(201,165,90,.2);color:var(--ink)}
+.dhead{background:#0d0d10;border-color:var(--line)}
+.tab{color:var(--ink-3)} .tab[aria-selected="true"]{color:var(--ink)} .ink{background:var(--goldgrad)!important}
+.ring .bgc{stroke:#25242a} .ring .fg{stroke:var(--gold)}
+.sbtn{background:transparent;border-color:var(--line-2);color:var(--ink-2)} .sbtn[aria-pressed="true"]{background:rgba(201,165,90,.12);border-color:var(--gold);color:var(--ink)}
+.apcard,.facts dd,.facts dt{color:var(--ink)}
+.bub{background:#111114;border-color:var(--line)} .bub.out{background:#17161a}
+.toast{background:#0d0d10;color:var(--ink);border:1px solid rgba(201,165,90,.45);box-shadow:0 20px 40px -10px rgba(0,0,0,.9)}
+.bulk{background:#0d0d10;border:1px solid rgba(201,165,90,.35);color:var(--ink)}
+.modal .box,#modal .box{background:var(--surface);color:var(--ink);border:1px solid rgba(201,165,90,.3)}
+.err{background:rgba(224,108,98,.08);border-color:rgba(224,108,98,.35);color:#f2b2ab}
+.kbox{background:#111114;border-color:rgba(201,165,90,.35)}
+.kitem[aria-selected="true"]{background:rgba(201,165,90,.1)}
+.switch .sl{background:#2a2830}
+.onbi{border-color:var(--line)} .onbi.on{background:var(--gold-soft);border-color:rgba(201,165,90,.5)}
+.callrow.live{background:rgba(201,165,90,.1);border-color:var(--gold)}
+.konb{background:#1d1c21} .konb i{background:rgba(201,165,90,.45)}
+.morefilters summary{color:var(--gold)}
+
+/* sign-in: the full crest on black, nothing boxed around it */
+.gate{background:#050506 radial-gradient(900px 520px at 50% 18%, rgba(201,165,90,.10), transparent 65%)!important;animation:none}
+.gbox{background:transparent!important;box-shadow:none!important;color:var(--ink);width:min(440px,100%);padding:10px 8px}
+.gbox .crest{border:0;box-shadow:none;width:auto;min-width:0;height:auto;padding:0;margin:0 0 6px}
+.gbox .crest img{width:min(360px,80vw);height:auto;display:block}
+.gbox h1{font:500 20px/1.2 var(--display);letter-spacing:.2em;text-transform:uppercase;color:var(--ink)}
+.gsub{color:var(--gold);letter-spacing:.34em}
+.gbox .form{width:100%;text-align:left}
+.gbox .field{background:rgba(255,255,255,.03);border-color:#2c2a31;height:46px}
+.gerr{color:#f2a39b}
+.glinks .btn{color:var(--ink-2)}
 </style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14284b"/><stop offset="1" stop-color="#6d93c4"/></linearGradient></defs></svg>
 <div class="app">
   <nav class="rail" aria-label="Main">
-    <div class="brand"><div class="mark"><span>CPG</span></div><div class="bname"><b>ClearPoint Global</b><small>Recruiting CRM</small></div></div>
+    <div class="brand"><img class="crestimg" src="brand/cpg-mark.png" alt="CPG"><div class="bname"><b>CLEARPOINT GLOBAL</b><small>Recruiting CRM</small></div></div>
     <button class="nav" data-view="dashboard" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>Home</button>
     <button class="nav" data-view="outreach" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>Work<span class="badge" id="inboxBadge"></span></button>
     <button class="nav" data-view="inbox" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13l3-8h12l3 8"/><path d="M3 13v6h18v-6h-5l-1.5 2.5h-5L8 13z"/></svg>Inbox<span class="badge" id="inboxBadge2"></span></button>
@@ -679,7 +827,7 @@ button.plain{all:unset;cursor:pointer} button.plain.x{padding:0 6px;color:var(--
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mT"><div class="box"><h2 id="mT" style="font-size:19px"></h2><div id="mB" style="font-size:14px;color:var(--ink-2)"></div><div class="acts"><button class="btn" type="button" id="mNo">Cancel</button><button class="btn primary" type="button" id="mYes">OK</button></div></div></div>
 <canvas id="confetti"></canvas>
-<div class="gate" id="gate"><div class="gbox"><div class="crest">CPG</div><h1>ClearPoint Global</h1><div class="gsub">Opening…</div></div></div>
+<div class="gate" id="gate"><div class="gbox"><div class="crest"><img src="brand/cpg-lockup.png" alt="ClearPoint Global"></div><div class="gsub">Opening…</div></div></div>
 <input type="file" id="fileIn" accept=".csv,.tsv,.txt,text/csv" multiple hidden>
 <script id="core">
 /* ===================== core logic (no DOM) ===================== */
@@ -1461,7 +1609,7 @@ var OBJECTIONS = [
       h("label",{class:"lbl",for:"g_email"},"Email", em),
       mode!=="reset" ? h("label",{class:"lbl",for:"g_pw"},"Password", pw) : null,
       go, err);
-    gate([h("div",{class:"crest"},"CPG"), h("h1",null,"ClearPoint Global"), h("div",{class:"gsub"},"Recruiting · Members only"),
+    gate([h("div",{class:"crest"}, h("img",{src:"brand/cpg-lockup.png",alt:"ClearPoint Global"})), h("div",{class:"gsub"},"Recruiting · Members only"),
       form,
       h("div",{class:"glinks"},
         mode!=="in" ? h("button",{type:"button",class:"btn ghost",onclick:function(){ showLogin("in"); }},"I have a login") : h("button",{type:"button",class:"btn ghost",onclick:function(){ showLogin("up"); }},"New here? Create your login"),
@@ -1472,10 +1620,10 @@ var OBJECTIONS = [
     var u = (await sb.auth.getUser()).data.user;
     if (!u){ showLogin(); return; }
     var r = await sb.from("profiles").select("*").eq("id", u.id).maybeSingle();
-    if (!r.data){ gate([h("div",{class:"crest"},"CPG"), h("h1",null,"One moment"), h("p",{class:"gsub"},"Setting up your login. Reopen the app in a minute."), signOutBtn()]); return; }
+    if (!r.data){ gate([h("div",{class:"crest"}, h("img",{src:"brand/cpg-lockup.png",alt:"ClearPoint Global"})), h("h1",null,"One moment"), h("p",{class:"gsub"},"Setting up your login. Reopen the app in a minute."), signOutBtn()]); return; }
     S.me = r.data;
     if (S.me.role==="pending" || S.me.role==="disabled"){
-      gate([h("div",{class:"crest"},"CPG"), h("h1",null, S.me.role==="pending" ? "Waiting for approval" : "Access paused"),
+      gate([h("div",{class:"crest"}, h("img",{src:"brand/cpg-lockup.png",alt:"ClearPoint Global"})), h("h1",null, S.me.role==="pending" ? "Waiting for approval" : "Access paused"),
         h("p",{class:"gsub",style:"text-transform:none;letter-spacing:0;font-size:14px"}, S.me.role==="pending" ? "Your login works. Frank or your manager needs to approve "+S.me.email+" before you can see agents. Ask them to open Team and approve you, then reopen the app." : "Your access to the CRM is turned off. Contact Frank if this is a mistake."),
         h("button",{type:"button",class:"btn",onclick:function(){ afterAuth(); }},"Check again"), signOutBtn()]);
       return;
@@ -1496,7 +1644,7 @@ var OBJECTIONS = [
   }
   async function bootAuth(){
     if (!window.supabase || !CFG.url || /YOUR_/.test(CFG.url)){
-      gate([h("div",{class:"crest"},"CPG"), h("h1",null,"Almost ready"), h("p",{class:"gsub",style:"text-transform:none;letter-spacing:0;font-size:14px"},"This copy of the app isn't connected to the ClearPoint database yet.")]);
+      gate([h("div",{class:"crest"}, h("img",{src:"brand/cpg-lockup.png",alt:"ClearPoint Global"})), h("h1",null,"Almost ready"), h("p",{class:"gsub",style:"text-transform:none;letter-spacing:0;font-size:14px"},"This copy of the app isn't connected to the ClearPoint database yet.")]);
       return;
     }
     sb = window.supabase.createClient(CFG.url, CFG.key, {auth:{persistSession:true, autoRefreshToken:true}});
@@ -1508,7 +1656,7 @@ var OBJECTIONS = [
     var pw = h("input",{class:"field",id:"g_np",type:"password",autocomplete:"new-password",placeholder:"New password (8+ characters)"});
     var pw2 = h("input",{class:"field",id:"g_np2",type:"password",autocomplete:"new-password",placeholder:"Type it again"});
     var err = h("div",{class:"gerr",role:"alert"});
-    gate([h("div",{class:"crest"},"CPG"), h("h1",null,"Choose a new password"),
+    gate([h("div",{class:"crest"}, h("img",{src:"brand/cpg-lockup.png",alt:"ClearPoint Global"})), h("h1",null,"Choose a new password"),
       h("div",{class:"gsub",style:"text-transform:none;letter-spacing:0;font-size:13px"}, S.me ? "For "+S.me.email : ""),
       h("form",{class:"form",onsubmit:async function(e){ e.preventDefault(); err.textContent = "";
         if (pw.value.length < 8){ err.textContent = "Use at least 8 characters."; return; }
@@ -2490,7 +2638,7 @@ var OBJECTIONS = [
       return el;
     }
     var roots = (kids.root||[]).sort(function(a,b){ return total(b)-total(a); });
-    var tree = h("ul",{class:"tree"}, h("li",null, h("div",{class:"tnode top"}, h("span",{class:"mark",style:"width:auto;min-width:46px;height:30px;font-size:12px"},"CPG"), h("div",null, h("b",null,"Frank B. · ClearPoint Global"), h("small",null, nf(rec.length)+" recruits · "+money(pa)+" all-time premium"))),
+    var tree = h("ul",{class:"tree"}, h("li",null, h("div",{class:"tnode top"}, h("img",{src:"brand/cpg-mark.png",alt:"CPG",style:"height:30px;width:auto"}), h("div",null, h("b",null,"Frank B. · ClearPoint Global"), h("small",null, nf(rec.length)+" recruits · "+money(pa)+" all-time premium"))),
       (function(){ var ul = h("ul",null); roots.forEach(function(p){ ul.appendChild(node(p,1)); }); return ul; })()));
     wrap.appendChild(h("div",{class:"card"}, h("div",{class:"hd"}, h("h2",null,"Team tree"), h("span",{class:"note"},"Set “Recruited by” on a recruit's profile to build the tree")), h("div",{class:"bd",style:"overflow:auto"}, tree)));
     return wrap;
