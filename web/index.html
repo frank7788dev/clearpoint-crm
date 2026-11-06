@@ -328,6 +328,9 @@ h1,h2,h3{font-weight:600;letter-spacing:0}
 .mark span{animation:none}
 .brand b{font:600 21px/1 var(--display);color:var(--rail-ink);letter-spacing:.02em}
 .brand small{color:var(--rail-dim);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;margin-top:5px}
+.brand{flex-direction:column;align-items:flex-start;gap:12px}
+.brand .mark{width:auto;min-width:64px;height:46px;padding:0 12px;font-size:19px;letter-spacing:.12em}
+.brand b{font-size:19px;white-space:nowrap}
 .nav{color:var(--rail-dim);font-weight:500;letter-spacing:.02em;border-radius:3px;padding:10px 12px}
 .nav:hover{background:color-mix(in srgb,var(--rail-ink) 7%,transparent);color:var(--rail-ink)}
 .nav[aria-current="page"]{background:color-mix(in srgb,var(--rail-ink) 11%,transparent);color:#fff}
@@ -562,7 +565,7 @@ label.lbl,.lbl{font-size:11px;letter-spacing:.12em;color:var(--ink-2)}
 .gbox .gsub{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
 .gbox .form{width:100%;text-align:left}
 .gbox .field{width:100%;height:44px}
-.crest{width:64px;height:64px;display:grid;place-items:center;border:1px solid var(--ink);box-shadow:inset 0 0 0 4px var(--surface),inset 0 0 0 5px var(--ink);font:600 24px var(--display);letter-spacing:.06em;margin-bottom:6px}
+.crest{min-width:78px;padding:0 10px;height:64px;display:grid;place-items:center;border:1px solid var(--ink);box-shadow:inset 0 0 0 4px var(--surface),inset 0 0 0 5px var(--ink);font:600 24px var(--display);letter-spacing:.06em;margin-bottom:6px}
 .gerr{font-size:13px;color:var(--hot);min-height:18px}
 .glinks{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 .credits .btn{margin-top:6px;color:var(--rail-ink);border-color:color-mix(in srgb,var(--rail-ink) 30%,transparent);background:transparent;height:30px;font-size:10px}
@@ -574,7 +577,7 @@ label.lbl,.lbl{font-size:11px;letter-spacing:.12em;color:var(--ink-2)}
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14284b"/><stop offset="1" stop-color="#6d93c4"/></linearGradient></defs></svg>
 <div class="app">
   <nav class="rail" aria-label="Main">
-    <div class="brand"><div class="mark"><span>CP</span></div><div><b>ClearPoint</b><small>Global · Recruiting</small></div></div>
+    <div class="brand"><div class="mark"><span>CPG</span></div><div class="bname"><b>ClearPoint Global</b><small>Recruiting CRM</small></div></div>
     <button class="nav" data-view="dashboard" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>Home</button>
     <button class="nav" data-view="outreach" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>Work<span class="badge" id="inboxBadge"></span></button>
     <button class="nav" data-view="prospects" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M17 11a3 3 0 1 0 0-6M22 21c0-3-2-5-5-5.5"/></svg>Leads</button>
@@ -607,7 +610,7 @@ label.lbl,.lbl{font-size:11px;letter-spacing:.12em;color:var(--ink-2)}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mT"><div class="box"><h2 id="mT" style="font-size:19px"></h2><div id="mB" style="font-size:14px;color:var(--ink-2)"></div><div class="acts"><button class="btn" type="button" id="mNo">Cancel</button><button class="btn primary" type="button" id="mYes">OK</button></div></div></div>
 <canvas id="confetti"></canvas>
-<div class="gate" id="gate"><div class="gbox"><div class="crest">CP</div><h1>ClearPoint Global</h1><div class="gsub">Opening…</div></div></div>
+<div class="gate" id="gate"><div class="gbox"><div class="crest">CPG</div><h1>ClearPoint Global</h1><div class="gsub">Opening…</div></div></div>
 <input type="file" id="fileIn" accept=".csv,.tsv,.txt,text/csv" multiple hidden>
 <script id="core">
 /* ===================== core logic (no DOM) ===================== */
@@ -1353,7 +1356,7 @@ var OBJECTIONS = [
       h("label",{class:"lbl",for:"g_email"},"Email", em),
       mode!=="reset" ? h("label",{class:"lbl",for:"g_pw"},"Password", pw) : null,
       go, err);
-    gate([h("div",{class:"crest"},"CP"), h("h1",null,"ClearPoint Global"), h("div",{class:"gsub"},"Recruiting · Members only"),
+    gate([h("div",{class:"crest"},"CPG"), h("h1",null,"ClearPoint Global"), h("div",{class:"gsub"},"Recruiting · Members only"),
       form,
       h("div",{class:"glinks"},
         mode!=="in" ? h("button",{type:"button",class:"btn ghost",onclick:function(){ showLogin("in"); }},"I have a login") : h("button",{type:"button",class:"btn ghost",onclick:function(){ showLogin("up"); }},"New here? Create your login"),
@@ -1364,10 +1367,10 @@ var OBJECTIONS = [
     var u = (await sb.auth.getUser()).data.user;
     if (!u){ showLogin(); return; }
     var r = await sb.from("profiles").select("*").eq("id", u.id).maybeSingle();
-    if (!r.data){ gate([h("div",{class:"crest"},"CP"), h("h1",null,"One moment"), h("p",{class:"gsub"},"Setting up your login. Reopen the app in a minute."), signOutBtn()]); return; }
+    if (!r.data){ gate([h("div",{class:"crest"},"CPG"), h("h1",null,"One moment"), h("p",{class:"gsub"},"Setting up your login. Reopen the app in a minute."), signOutBtn()]); return; }
     S.me = r.data;
     if (S.me.role==="pending" || S.me.role==="disabled"){
-      gate([h("div",{class:"crest"},"CP"), h("h1",null, S.me.role==="pending" ? "Waiting for approval" : "Access paused"),
+      gate([h("div",{class:"crest"},"CPG"), h("h1",null, S.me.role==="pending" ? "Waiting for approval" : "Access paused"),
         h("p",{class:"gsub",style:"text-transform:none;letter-spacing:0;font-size:14px"}, S.me.role==="pending" ? "Your login works. Frank or your manager needs to approve "+S.me.email+" before you can see agents. Ask them to open Team and approve you, then reopen the app." : "Your access to the CRM is turned off. Contact Frank if this is a mistake."),
         h("button",{type:"button",class:"btn",onclick:function(){ afterAuth(); }},"Check again"), signOutBtn()]);
       return;
@@ -1381,13 +1384,13 @@ var OBJECTIONS = [
   var ROLE_LABEL = {owner:"Owner", manager:"Manager", recruiter:"Recruiter", pending:"Waiting for approval", disabled:"Access paused"};
   function renderMe(){
     var box = $("#credits"); box.textContent = ""; box.style.cursor = ""; box.onclick = null;
-    add(box, [h("span",null, ROLE_LABEL[S.me.role]), h("b",null, S.me.full_name || S.settings.myName || S.me.email.split("@")[0]), h("span",{style:"word-break:break-all"}, S.me.email), signOutBtn()]);
+    add(box, [h("span",null, ROLE_LABEL[S.me.role]), h("b",null, S.me.full_name || S.settings.myName || S.me.email.split("@")[0]), h("span",{style:"word-break:break-all"}, S.me.email), h("button",{type:"button",class:"btn ghost",onclick:function(){ newPassword(true); }},"Change password"), signOutBtn()]);
     $$('.nav[data-view="team"]').forEach(function(b){ b.hidden = !isLead(); });
     $$('.nav[data-view="apollo"]').forEach(function(b){ b.hidden = A.state!=="ready"; });
   }
   async function bootAuth(){
     if (!window.supabase || !CFG.url || /YOUR_/.test(CFG.url)){
-      gate([h("div",{class:"crest"},"CP"), h("h1",null,"Almost ready"), h("p",{class:"gsub",style:"text-transform:none;letter-spacing:0;font-size:14px"},"This copy of the app isn't connected to the ClearPoint database yet.")]);
+      gate([h("div",{class:"crest"},"CPG"), h("h1",null,"Almost ready"), h("p",{class:"gsub",style:"text-transform:none;letter-spacing:0;font-size:14px"},"This copy of the app isn't connected to the ClearPoint database yet.")]);
       return;
     }
     sb = window.supabase.createClient(CFG.url, CFG.key, {auth:{persistSession:true, autoRefreshToken:true}});
@@ -1395,9 +1398,21 @@ var OBJECTIONS = [
     var s = (await sb.auth.getSession()).data.session;
     if (s) afterAuth(); else showLogin();
   }
-  function newPassword(){
-    var pw = h("input",{class:"field",id:"g_np",type:"password",placeholder:"New password (8+ characters)"}), err = h("div",{class:"gerr"});
-    gate([h("div",{class:"crest"},"CP"), h("h1",null,"Choose a new password"), h("form",{class:"form",onsubmit:async function(e){ e.preventDefault(); var r = await sb.auth.updateUser({password:pw.value}); if (r.error){ err.textContent = r.error.message; return; } afterAuth(); }}, pw, h("button",{type:"submit",class:"btn primary"},"Save password"), err)]);
+  function newPassword(canCancel){
+    var pw = h("input",{class:"field",id:"g_np",type:"password",autocomplete:"new-password",placeholder:"New password (8+ characters)"});
+    var pw2 = h("input",{class:"field",id:"g_np2",type:"password",autocomplete:"new-password",placeholder:"Type it again"});
+    var err = h("div",{class:"gerr",role:"alert"});
+    gate([h("div",{class:"crest"},"CPG"), h("h1",null,"Choose a new password"),
+      h("div",{class:"gsub",style:"text-transform:none;letter-spacing:0;font-size:13px"}, S.me ? "For "+S.me.email : ""),
+      h("form",{class:"form",onsubmit:async function(e){ e.preventDefault(); err.textContent = "";
+        if (pw.value.length < 8){ err.textContent = "Use at least 8 characters."; return; }
+        if (pw.value !== pw2.value){ err.textContent = "The two passwords don't match."; return; }
+        var r = await sb.auth.updateUser({password:pw.value}); if (r.error){ err.textContent = r.error.message; return; }
+        $("#gate").hidden = true; toast("Password changed. Use it next time you sign in."); if (!S.me) afterAuth(); }},
+        h("label",{class:"lbl",for:"g_np"},"New password", pw), h("label",{class:"lbl",for:"g_np2"},"Confirm new password", pw2),
+        h("button",{type:"submit",class:"btn primary",style:"width:100%;height:46px"},"Save password"), err),
+      canCancel ? h("div",{class:"glinks"}, h("button",{type:"button",class:"btn ghost",onclick:function(){ $("#gate").hidden = true; }},"Cancel")) : null]);
+    setTimeout(function(){ pw.focus(); }, 50);
   }
 
   /* ================= filtering ================= */
