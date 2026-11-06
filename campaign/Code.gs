@@ -139,7 +139,7 @@ function crm(payload) {
     const r = UrlFetchApp.fetch(CRM_URL, {
       method: 'post', contentType: 'application/json', muteHttpExceptions: true,
       headers: { Authorization: 'Bearer ' + CRM_KEY, apikey: CRM_KEY, 'x-google-id-token': ScriptApp.getIdentityToken() },
-      payload: JSON.stringify(payload)
+      payload: JSON.stringify(Object.assign({ id_token: ScriptApp.getIdentityToken() }, payload))
     });
     if (r.getResponseCode() !== 200) { console.log('CRM ' + payload.event + ': ' + r.getResponseCode() + ' ' + r.getContentText().slice(0, 200)); return null; }
     return JSON.parse(r.getContentText());
