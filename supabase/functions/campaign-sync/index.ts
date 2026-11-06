@@ -127,6 +127,15 @@ Deno.serve(async (req) => {
       if (skip.length) await sb.from("outbox").update({ status: "error", error: "Skipped: already contacted" }).in("id", skip);
       items = items.filter((x) => skip.indexOf(x.id) < 0);
     }
+    // never send the same email twice: same agent + same subject already sent in the last 30 days
+    const ids = [...new Set(items.map((x) => x.agent_id).filter(Boolean))];
+    if (ids.length) {
+      const { data: prev } = await sb.from("outbox").select("agent_id,subject").eq("status", "sent").in("agent_id", ids).gte("sent_at", new Date(Date.now() - 30 * 864e5).toISOString());
+      const seen = new Set((prev || []).map((x) => x.agent_id + "|" + x.subject));
+      const dup: string[] = [];
+      items = items.filter((x) => { const k = x.agent_id + "|" + x.subject; if (x.agent_id && seen.has(k)) { dup.push(x.id); return false; } seen.add(k); return true; });
+      if (dup.length) await sb.from("outbox").update({ status: "error", error: "Duplicate removed" }).in("id", dup);
+    }
     if (items.length) await sb.from("outbox").update({ status: "sending" }).in("id", items.map((x) => x.id));
     return json({ items });
   }

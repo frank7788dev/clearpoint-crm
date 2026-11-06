@@ -2277,10 +2277,15 @@ var OBJECTIONS = [
   }
   function saveAutosend(){ return sb.from("org_settings").update({autosend:S.autosend, updated_at:new Date().toISOString()}).eq("id",1).then(function(r){ if (r.error) toast(dbMsg(r.error)); }); }
   async function sendBatchNow(cfg){
+    if (S.batchBusy){ toast("Your last batch is still being scheduled. One moment."); return; }
+    var today = S.pendDays[todayIso()] || 0;
     var n = Math.max(1, Math.min(500, +cfg.count||100)), pool = autoPool(cfg).slice(0, n);
+    if (today >= n){ ask(nf(today)+" emails are already scheduled today", "Sending another "+nf(pool.length)+" today means "+nf(today+pool.length)+" from a brand-new domain in one day, which is the fastest way to land in spam. Send them anyway?", "Send anyway", function(){ S.batchOk = todayIso(); sendBatchNow(cfg); }); if (S.batchOk!==todayIso()) return; }
     if (!pool.length){ toast("No new agents with an email match these settings."); return; }
+    S.batchOk = null;
     ask("Send "+nf(pool.length)+" emails now?", "Each agent gets your first email, personalized with their name, from fadybashir@clearpointglobal.org. They go out one every 30 seconds (about "+Math.ceil(pool.length/2)+" minutes), and anyone who replies is handled automatically.", "Send "+nf(pool.length)+" emails", async function(){
-      var k = await queueBatch(pool, new Date(), 30);
+      if (S.batchBusy) return; S.batchBusy = true;
+      var k = 0; try { k = await queueBatch(pool, new Date(), 30); } finally { S.batchBusy = false; }
       if (k){ S.autosend.lastNow = todayIso(); saveAutosend(); toast("✓ "+nf(k)+" emails are on their way"); renderView(true); }
     });
   }
@@ -2293,12 +2298,19 @@ var OBJECTIONS = [
     return out;
   }
   async function autoTopUp(){
+    if (S.topping) return; S.topping = true;
+    try { await autoTopUp_(); } finally { S.topping = false; }
+  }
+  async function autoTopUp_(){
+    var fresh = await sb.from("org_settings").select("autosend").eq("id",1).maybeSingle();
+    if (fresh.data && fresh.data.autosend) S.autosend = fresh.data.autosend;
+    await loadPending();
     var a = S.autosend || {};
     if (!a.on || !isOwner() || !Store.ready || S.examples) return;
     var filled = a.filled || [], added = 0;
     var days = weekdaysAhead(5);
     for (var i=0;i<days.length;i++){
-      var key = dayKey(days[i]); if (filled.indexOf(key)>-1) continue;
+      var key = dayKey(days[i]); if (filled.indexOf(key)>-1 || (S.pendDays[key]||0) >= (+a.count||100)) { if (filled.indexOf(key)<0) filled.push(key); continue; }
       var pool = autoPool(a).slice(0, Math.max(1, Math.min(500, +a.count||100)));
       if (!pool.length) break;
       var gap = Math.max(60, Math.floor((6*3600)/pool.length));   // spread over ~6 hours from 9am
@@ -2379,8 +2391,12 @@ var OBJECTIONS = [
     if (!p.email){ toast("No email address for this agent."); return; }
     if (/\[[a-z][^\]]{1,30}\]/i.test(subject+" "+body)){ toast("Fill in the parts in [brackets] first."); return; }
     if (!String(body||"").trim()){ toast("Write a message first."); return; }
+    S.sendLock = S.sendLock || {};
+    if (S.sendLock[p.id]) return;
+    S.sendLock[p.id] = 1;
     var r = await sb.from("outbox").insert({agent_id:p.ex ? null : p.id, to_email:p.email, subject:subject||"", body:body||"", created_by:S.me.id});
-    if (r.error){ toast(dbMsg(r.error)); return; }
+    setTimeout(function(){ delete S.sendLock[p.id]; }, 4000);
+    if (r.error){ toast(/duplicate|unique/i.test(r.error.message||"") ? "That email to "+C.displayName(p)+" is already on its way." : dbMsg(r.error)); return; }
     p.lastTouch = {at:new Date().toISOString(), ch:"email", dir:"out", what:"Email sending from business email", body:""};
     p.waiting = false; if (p.status==="new") p.status = "contacted"; if (!p.fu) p.fu = isoDaysAhead(3);
     touch(p); markDirty(p); refreshBadges();
@@ -2445,7 +2461,7 @@ var OBJECTIONS = [
         send.className = "btn";
         send.textContent = "Open in Gmail";
         var now_ = h("button",{type:"button",class:"btn primary bigsend"}, icon("mail"), "Send now");
-        now_.addEventListener("click", function(){ var nx = nextInQueue(p.id); sendNow(p, O.subject, O.body, function(){ var row = document.querySelector('.qitem[data-id="'+p.id+'"]'); if (row) row.classList.add("gone"); O.forId = null; O.cur = nx; setTimeout(function(){ if (S.view==="outreach") renderView(true); }, 380); }); });
+        now_.addEventListener("click", function(){ if (now_.disabled) return; now_.disabled = true; var nx = nextInQueue(p.id); sendNow(p, O.subject, O.body, function(){ var row = document.querySelector('.qitem[data-id="'+p.id+'"]'); if (row) row.classList.add("gone"); O.forId = null; O.cur = nx; setTimeout(function(){ if (S.view==="outreach") renderView(true); }, 380); }); });
         bd.appendChild(h("div",{style:"display:flex;gap:8px;align-items:center;flex-wrap:wrap"}, now_, h("span",{class:"note"},"Sends from ", h("b",{style:"color:var(--ink)"},"fadybashir@clearpointglobal.org"), " within 5 minutes.")));
       }
       var outlook = ch==="Email" && p.email ? h("a",{class:"btn",target:"_blank",rel:"noopener",href:outlookUrl(p.email,O.subject,O.body),onclick:function(){ var id=p.id, nx=nextInQueue(id); setTimeout(function(){ logAct(p,{ch:"email",dir:"out",what:"Email sent",sub:O.subject,body:O.body}); O.forId=null; O.cur=nx; renderView(true); },60); }},"Outlook") : null;
