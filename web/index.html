@@ -1000,6 +1000,7 @@ var OBJECTIONS = [
 
   /* ================= shared database (Supabase): logins, roles, live sync ================= */
   var CFG = window.CRM_CONFIG || {};
+  var APP_HOME = CFG.home || "https://frank7788dev.github.io/clearpoint-crm/";
   var sb = null, MAX = 200000;
   var Store = {ready:false, dirty:{}, timer:null, saving:false, again:false, setTimer:null};
   S.me = null; S.team = []; S.stats = {};
@@ -1191,9 +1192,9 @@ var OBJECTIONS = [
       e.preventDefault(); err.textContent = ""; go.disabled = true;
       try {
         var email = em.value.trim().toLowerCase();
-        if (mode==="reset"){ var rr = await sb.auth.resetPasswordForEmail(email); if (rr.error) throw rr.error; err.textContent = "Check your email for a reset link."; go.disabled = false; return; }
+        if (mode==="reset"){ var rr = await sb.auth.resetPasswordForEmail(email, {redirectTo:APP_HOME}); if (rr.error) throw rr.error; err.textContent = "Check your email for a reset link."; go.disabled = false; return; }
         if (mode==="up"){
-          var r = await sb.auth.signUp({email:email, password:pw.value, options:{data:{full_name:nm.value.trim()}}});
+          var r = await sb.auth.signUp({email:email, password:pw.value, options:{data:{full_name:nm.value.trim()}, emailRedirectTo:APP_HOME}});
           if (r.error) throw r.error;
           if (!r.data.session){ showLogin("in", "Almost done: open the confirmation email we just sent to "+email+", then sign in here."); return; }
           if (nm.value.trim()) await sb.from("profiles").update({full_name:nm.value.trim()}).eq("id", r.data.user.id);
