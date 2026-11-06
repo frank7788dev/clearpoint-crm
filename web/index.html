@@ -30,24 +30,6 @@
   --r:6px; --ease:cubic-bezier(.2,.8,.2,1); --spring:cubic-bezier(.34,1.4,.64,1);
   color-scheme:light;
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#090d17; --surface:#0f1626; --surface-2:#141d31; --ink:#f2eee4; --ink-2:#c3c8d4; --ink-3:#7f879a;
-    --line:#202a40; --line-2:#2e3a55; --accent:#a9bfe3; --accent-ink:#0a1020; --accent-soft:#1a2540; --hot:#d97a86;
-    --good:#7cc2a0; --warn:#d6b56b; --bad:#e08a92; --rookie:#8fb3dd; --exp:#a9bfe3; --lead:#f2eee4;
-    --rail:#060a13; --rail-ink:#ece7da; --rail-dim:#7f8aa3;
-    --shadow:0 1px 0 rgba(0,0,0,.3),0 10px 30px -18px rgba(0,0,0,.6); --shadow-lift:0 24px 48px -20px rgba(0,0,0,.7);
-    color-scheme:dark;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#090d17; --surface:#0f1626; --surface-2:#141d31; --ink:#f2eee4; --ink-2:#c3c8d4; --ink-3:#7f879a;
-  --line:#202a40; --line-2:#2e3a55; --accent:#a9bfe3; --accent-ink:#0a1020; --accent-soft:#1a2540; --hot:#d97a86;
-  --good:#7cc2a0; --warn:#d6b56b; --bad:#e08a92; --rookie:#8fb3dd; --exp:#a9bfe3; --lead:#f2eee4;
-  --rail:#060a13; --rail-ink:#ece7da; --rail-dim:#7f8aa3;
-  --shadow:0 1px 0 rgba(0,0,0,.3),0 10px 30px -18px rgba(0,0,0,.6); --shadow-lift:0 24px 48px -20px rgba(0,0,0,.7);
-  color-scheme:dark;
-}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--ink);font:500 14px/1.5 var(--body);-webkit-font-smoothing:antialiased}
@@ -503,6 +485,60 @@ tbody tr:hover{background:linear-gradient(90deg,var(--accent-soft),transparent 7
 @media (max-width:1100px){ .steps{grid-template-columns:repeat(2,minmax(0,1fr))} }
 @media (max-width:760px){ .steps{grid-template-columns:1fr} .hero-band h2{font-size:28px} }
 
+
+/* =================== easier to use: bright, larger, simpler =================== */
+:root{color-scheme:light}
+body{font-size:15px;line-height:1.6}
+.nav{font-size:15px;padding:11px 12px}
+.nav.sub{font-size:13.5px;padding:8px 12px}
+.navlabel{font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--rail-dim);padding:18px 12px 6px;opacity:.8}
+.nav .badge{font-size:11.5px;min-width:24px;height:22px}
+.top h1{font-size:40px}
+.btn{font-size:12.5px;letter-spacing:.08em;height:42px}
+.btn.sm{font-size:11.5px;height:34px}
+.field{height:42px;font-size:15px}
+td{font-size:14.5px;padding:12px 14px}
+th{font-size:10.5px;letter-spacing:.14em}
+label.lbl,.lbl{font-size:11px;letter-spacing:.12em;color:var(--ink-2)}
+.note{font-size:13.5px;color:var(--ink-2)}
+.chip{font-size:10.5px;height:22px}
+.card > .hd h2{font-size:26px}
+/* home: three big actions */
+.bigacts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.bigact{all:unset;cursor:pointer;position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:22px 22px 18px;display:flex;flex-direction:column;gap:4px;box-shadow:var(--shadow);border-top:4px solid var(--c);transition:transform .3s var(--ease),box-shadow .3s}
+.bigact:hover{transform:translateY(-4px);box-shadow:0 26px 50px -24px rgba(15,31,61,.4)}
+.bigact b{font:600 52px/1 var(--display);color:var(--ink)}
+.bigact .t{font-weight:700;font-size:17px;margin-top:6px}
+.bigact .d{font-size:13.5px;color:var(--ink-2)}
+.bigact .go{margin-top:10px;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--c)}
+/* work: three tabs */
+.worktabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.wtab{all:unset;cursor:pointer;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:14px;align-items:center;padding:16px 18px;border:1px solid var(--line);border-radius:6px;background:var(--surface);transition:all .25s var(--ease)}
+.wtab b{grid-row:1 / span 2;font:600 40px/1 var(--display);color:var(--ink-3);min-width:48px}
+.wtab span{font-weight:700;font-size:16px}
+.wtab small{font-size:12.5px;color:var(--ink-3)}
+.wtab:hover{border-color:var(--line-2);transform:translateY(-2px)}
+.wtab[aria-selected="true"]{background:var(--rail);border-color:var(--rail);color:#f3efe4;box-shadow:0 20px 40px -22px rgba(15,31,61,.6)}
+.wtab[aria-selected="true"] b{color:#fff}
+.wtab[aria-selected="true"] small{color:#b9c3d6}
+.queue{max-height:62vh}
+.qitem{padding:11px 12px}
+.qitem .t{font-size:14.5px}
+.qitem .d{font-size:12.5px}
+/* leads */
+.bigsearch{height:52px;font-size:16px;padding:0 18px;border-radius:4px;box-shadow:var(--shadow)}
+.statechips{display:flex;gap:6px;flex-wrap:wrap}
+.schip{all:unset;cursor:pointer;display:inline-flex;gap:8px;align-items:center;height:34px;padding:0 12px;border:1px solid var(--line);border-radius:3px;background:var(--surface);font-weight:700;font-size:13px;transition:all .2s var(--ease)}
+.schip span{font-weight:500;color:var(--ink-3);font-size:12px;font-variant-numeric:tabular-nums}
+.schip:hover{border-color:var(--accent)}
+.schip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.schip[aria-pressed="true"] span{color:#c9d6ea}
+.morefilters summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--accent);padding:4px 0;list-style:none}
+.morefilters summary::before{content:"+ "}
+.morefilters[open] summary::before{content:"− "}
+.morefilters .toolbar{margin-top:10px}
+@media (max-width:1100px){ .bigacts,.worktabs{grid-template-columns:1fr} }
+
 /* ---------- dashboard greeting, pipeline summary, territories ---------- */
 .hello{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .hello h2{font-size:30px}
@@ -539,15 +575,15 @@ tbody tr:hover{background:linear-gradient(90deg,var(--accent-soft),transparent 7
 <div class="app">
   <nav class="rail" aria-label="Main">
     <div class="brand"><div class="mark"><span>CP</span></div><div><b>ClearPoint</b><small>Global · Recruiting</small></div></div>
-    <button class="nav" data-view="dashboard" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg>Dashboard</button>
-    <button class="nav" data-view="prospects" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M17 11a3 3 0 1 0 0-6M22 21c0-3-2-5-5-5.5"/></svg>Agents</button>
-    <button class="nav" data-view="team" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 16.8 6.5 19.5l1-6.3L3 8.9 9 8z"/></svg>Team</button>
-    <button class="nav" data-view="outreach" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>Outreach</button>
+    <button class="nav" data-view="dashboard" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>Home</button>
+    <button class="nav" data-view="outreach" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>Work<span class="badge" id="inboxBadge"></span></button>
+    <button class="nav" data-view="prospects" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M17 11a3 3 0 1 0 0-6M22 21c0-3-2-5-5-5.5"/></svg>Leads</button>
     <button class="nav" data-view="pipeline" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="11" rx="1.5"/><rect x="17" y="4" width="4" height="7" rx="1.5"/></svg>Pipeline</button>
-    <button class="nav" data-view="inbox" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13l3-8h12l3 8v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 13h5l1 3h6l1-3h5"/></svg>Inbox<span class="badge" id="inboxBadge"></span></button>
-    <button class="nav" data-view="apollo" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg>Apollo finder</button>
-    <button class="nav" data-view="scripts" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h12l4 4v12H4z"/><path d="M8 12h8M8 16h5M8 8h4"/></svg>Scripts</button>
-    <button class="nav" data-view="settings" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Import &amp; settings</button>
+    <div class="navlabel">Admin</div>
+    <button class="nav sub" data-view="team" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 16.8 6.5 19.5l1-6.3L3 8.9 9 8z"/></svg>Team</button>
+    <button class="nav sub" data-view="scripts" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h12l4 4v12H4z"/><path d="M8 12h8M8 16h5M8 8h4"/></svg>Scripts</button>
+    <button class="nav sub" data-view="apollo" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Apollo finder</button>
+    <button class="nav sub" data-view="settings" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Settings &amp; import</button>
     <div class="grow"></div>
     <div class="credits" id="credits"><span>Signing in…</span></div>
     <div class="save" id="save" data-s="saving"><i></i><span id="saveText">Loading your agents…</span></div>
@@ -1423,16 +1459,18 @@ var OBJECTIONS = [
     c.replied = c.st.replied + c.st.booked + c.st.contracting + c.st.joined;
     return c;
   }
-  function refreshBadges(){ var n = 0; S.list.forEach(function(p){ if (p.waiting) n++; }); $("#inboxBadge").textContent = n ? (n>99?"99+":String(n)) : ""; }
+  function refreshBadges(){ var n = 0; S.list.forEach(function(p){ if (p.waiting || (p.fu && p.fu<=TODAY && p.status!=="dnc")) n++; }); $("#inboxBadge").textContent = n ? (n>99?"99+":String(n)) : ""; }
 
   /* ================= router ================= */
-  var TITLES = {dashboard:"Dashboard", team:"Team", outreach:"Outreach", prospects:"Agents", pipeline:"Pipeline", inbox:"Inbox", apollo:"Apollo finder", scripts:"Scripts", settings:"Import & settings"};
+  var TITLES = {dashboard:"Home", team:"Team", outreach:"Work", prospects:"Leads", pipeline:"Pipeline", inbox:"Inbox", apollo:"Apollo finder", scripts:"Scripts", settings:"Settings & import"};
   function route(){
     var v = (location.hash||"").replace("#","");
+    if (v==="inbox"){ O.stage = "waiting"; v = "outreach"; }
     if (!TITLES[v]) v = "dashboard";
     S.view = v; S.page = 0;
     $$(".nav").forEach(function(b){ if (b.getAttribute("data-view")===v) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
     $("#viewTitle").textContent = TITLES[v];
+    $(".search").style.visibility = v==="prospects" ? "hidden" : "";
     renderView(false);
     $("#main").scrollTop = 0;
   }
@@ -1487,17 +1525,26 @@ var OBJECTIONS = [
     var list = scoped(), c = stats(list), wrap = h("section",{class:"view"});
     var hr = new Date().getHours(), first = ((S.me && (S.me.full_name||S.settings.myName)) || "").split(/\s+/)[0] || "";
     var mine = S.list.filter(function(p){ return p.lastTouch && p.lastTouch.dir==="out" && !/^Campaign/.test(p.lastTouch.what||"") && String(p.lastTouch.at).slice(0,10)===new Date().toISOString().slice(0,10); });
-    var todayStrip = h("div",{class:"pills",style:"justify-content:flex-end"},
-      h("button",{type:"button",class:"pill",onclick:function(){ location.hash="inbox"; }}, h("span",{class:"dot",style:"background:var(--hot)"}), nf(c.waiting)+" waiting on you"),
-      h("button",{type:"button",class:"pill",onclick:function(){ location.hash="inbox"; }}, h("span",{class:"dot",style:"background:var(--warn)"}), nf(c.due)+" follow-ups due"),
-      h("button",{type:"button",class:"pill",onclick:function(){ location.hash="outreach"; }}, h("span",{class:"dot",style:"background:var(--good)"}), nf(mine.length)+" sent today"),
-      h("button",{type:"button",class:"pill cta",onclick:function(){ location.hash="outreach"; }}, "Start outreach →"));
+    var todayStrip = h("div",{class:"pills",style:"justify-content:flex-end;align-items:center"},
+      h("span",{class:"note",style:"color:#b9c3d6"}, nf(mine.length)+" sent today"),
+      h("button",{type:"button",class:"pill cta",onclick:function(){ O.stage = c.waiting ? "waiting" : c.due ? "due" : "new"; O.cur = null; O.forId = null; location.hash="outreach"; }}, "Start working →"));
     var line = c.waiting ? nf(c.waiting)+" agent"+(c.waiting===1?" is":"s are")+" waiting on your reply." : c.due ? nf(c.due)+" follow-up"+(c.due===1?" is":"s are")+" due today." : "You're all caught up. A good day to reach new agents.";
     wrap.appendChild(h("div",{class:"hero-band"},
       h("div",null, h("div",{class:"eyebrow"}, "ClearPoint Global · "+new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})),
         h("h2",null,(hr<12?"Good morning":hr<17?"Good afternoon":"Good evening")+(first?", "+first:"")),
         h("div",{class:"big"}, line+(S.scope.state||S.scope.owner ? " (filtered view)" : ""))),
       todayStrip));
+    var acts3 = h("div",{class:"bigacts stagger"});
+    var nNew = list.filter(function(p){ return p.status==="new" && p.email; }).length;
+    [["waiting", c.waiting, "Replies to answer", c.waiting ? "Agents wrote back. Answer them first." : "No one is waiting on you.", "var(--hot)"],
+     ["due", c.due, "Follow-ups due", c.due ? "Check in with agents you've already contacted." : "Nothing due today.", "var(--warn)"],
+     ["new", nNew, "New agents to email", "Agents with an email you haven't contacted yet.", "var(--accent)"]].forEach(function(a, i){
+      var n = h("b",{class:"num"},"0");
+      acts3.appendChild(h("button",{type:"button",class:"bigact",style:"--c:"+a[4]+";animation-delay:"+(i*80)+"ms",onclick:function(){ O.stage = a[0]; O.cur = null; O.forId = null; location.hash = "outreach"; }},
+        n, h("span",{class:"t"}, a[2]), h("span",{class:"d"}, a[3]), h("span",{class:"go"},"Open →")));
+      later(function(){ countUp(n, a[1], 900+i*120); });
+    });
+    wrap.appendChild(acts3);
     if (isOwner()) wrap.appendChild(gettingStarted());
     wrap.appendChild(scopeBar());
     var k = [
@@ -1622,13 +1669,22 @@ var OBJECTIONS = [
       return s;
     }
     var states = {}; S.list.forEach(function(p){ if (p.state) states[p.state] = (states[p.state]||0)+1; });
+    var chips = h("div",{class:"statechips"});
+    chips.appendChild(h("button",{type:"button",class:"schip","aria-pressed":!S.f.state?"true":"false",onclick:function(){ S.f.state = ""; S.page = 0; renderView(true); }}, "All states", h("span",null, nf(S.list.length))));
+    Object.keys(states).sort(function(a,b){ return states[b]-states[a]; }).forEach(function(k){
+      chips.appendChild(h("button",{type:"button",class:"schip","aria-pressed":S.f.state===k?"true":"false",title:C.STATES[k]||k,onclick:function(){ S.f.state = S.f.state===k ? "" : k; S.page = 0; renderView(true); }}, k, h("span",null, nf(states[k]))));
+    });
+    var big = h("input",{class:"field bigsearch",id:"leadsearch",type:"search",placeholder:"Search by name, agency, city, email or NPN",value:S.f.q});
+    var bT; big.addEventListener("input", function(){ clearTimeout(bT); bT = setTimeout(function(){ S.f.q = big.value; $("#q").value = big.value; S.page = 0; renderView(true); var f = $("#leadsearch"); if (f){ f.focus(); f.setSelectionRange(f.value.length, f.value.length); } }, 200); });
+    wrap.appendChild(h("div",{style:"display:flex;flex-direction:column;gap:12px"}, big, chips));
     var tb = h("div",{class:"toolbar"},
       sel("fTrack","Segment",S.f.track,[["","All segments"],["rookie","New agents"],["experienced","Experienced"],["leader","Veterans & leaders"]],function(v){ S.f.track=v; }),
       sel("fStatus","Stage",S.f.status,[["","All stages"]].concat(C.STATUSES.map(function(s){ return [s.k,s.label]; })),function(v){ S.f.status=v; }),
-      sel("fState","State",S.f.state,[["","All states"]].concat(Object.keys(states).sort().map(function(k){ return [k,(C.STATES[k]||k)+" ("+nf(states[k])+")"]; })),function(v){ S.f.state=v; }),
       isLead() ? sel("fOwner","Assigned to",S.f.owner,[["","Anyone on the team"],["none","Not assigned yet"]].concat(S.team.filter(function(m){ return m.role!=="pending" && m.role!=="disabled"; }).map(function(m){ return [m.id, m.full_name||m.email]; })),function(v){ S.f.owner=v; }) : null,
       sel("fContact","Contact info",S.f.contact,[["","Any contact info"],["email","Has email"],["phone","Has phone"],["none","No contact info"],["apollo","Enriched by Apollo"]],function(v){ S.f.contact=v; }));
-    wrap.appendChild(h("div",{style:"display:flex;flex-direction:column;gap:12px"}, flags, tb));
+    var more = h("details",{class:"morefilters"}, h("summary",null,"More filters"), tb);
+    if (S.f.track || S.f.status || S.f.contact || S.f.owner) more.open = true;
+    wrap.appendChild(h("div",{style:"display:flex;flex-direction:column;gap:12px"}, flags, more));
 
     var rows = currentRows = filtered();
     var pages = Math.max(1, Math.ceil(rows.length/S.per)); if (S.page>=pages) S.page = pages-1;
@@ -1647,11 +1703,11 @@ var OBJECTIONS = [
       ck.addEventListener("click", function(e){ e.stopPropagation(); });
       ck.addEventListener("change", function(){ if (ck.checked) S.sel[p.id]=1; else delete S.sel[p.id]; tr.classList.toggle("sel", ck.checked); renderBulk(); });
       var yrs = d.yrs==null ? "—" : d.yrs<1 ? Math.max(1,Math.round(d.days/30))+" mo" : Math.floor(d.yrs)+" yrs";
+      var yrsCell = h("td",{class:"num",style:"white-space:nowrap"}, yrs+(d.est?"*":""), d.hot ? h("span",{class:"chip hot",style:"margin-left:6px"},"New") : null);
       var tr = h("tr",{class:(S.sel[p.id]?"sel ":"")+(S.openId===p.id?"open":""),style:i<30?"animation-delay:"+(i*18)+"ms":"animation:none",onclick:function(){ openDrawer(p.id); }},
         h("td",{style:"width:36px"},ck),
         h("td",null, h("div",{class:"who"}, avatar(p), h("div",{style:"min-width:0"}, h("div",{class:"nm"}, C.displayName(p), p.waiting ? h("span",{class:"chip hot",style:"margin-left:8px"},"Replied") : null), h("div",{class:"sub"}, [p.title, p.company].filter(Boolean).join(" · ")||(p.city?p.city+", "+p.state:"Licensed agent"))))),
-        h("td",null, h("span",{class:"chip "+d.track}, C.TRACK_LABEL[d.track]), d.hot ? h("span",{class:"chip hot",style:"margin-left:4px"},"Hot") : null),
-        h("td",{class:"num"}, yrs+(d.est?"*":"")),
+        yrsCell,
         h("td",null, p.state||"—"),
         h("td",null, h("div",{class:"cicons"}, h("i",{class:p.email?"on":"",title:p.email||"No email",html:ICON.mail}), h("i",{class:(p.phone||p.mobile)?"on":"",title:C.fmtPhone(p.phone||p.mobile)||"No phone",html:ICON.phone}), h("i",{class:p.sms?"on":"",title:p.sms?"Opted in to texts":"Not opted in to texts",html:ICON.sms}), p.ap ? h("i",{class:"on",title:"Enriched by Apollo",html:ICON.spark}) : null)),
         h("td",null, h("span",{class:"stat"}, h("span",{class:"dot",style:"background:"+st.color}), st.label)),
@@ -1660,7 +1716,7 @@ var OBJECTIONS = [
         h("td",null, h("span",{class:"score"}, h("span",{class:"sb"}, h("i",{style:"width:"+d.score+"%"})), h("span",{class:"num"}, d.score))));
       tbody.appendChild(tr);
     });
-    var table = h("table",null, h("thead",null, h("tr",null, h("th",null,cb), th("Agent","name"), th("Segment"), th("In business","yrs"), th("State","state"), th("Contact"), th("Stage","status"), isLead() ? th("Recruiter") : null, th("Last touch","touch"), th("Score","score"))), tbody);
+    var table = h("table",null, h("thead",null, h("tr",null, h("th",null,cb), th("Agent","name"), th("In business","yrs"), th("State","state"), th("Contact"), th("Stage","status"), isLead() ? th("Recruiter") : null, th("Last touch","touch"), th("Score","score"))), tbody);
     var card = h("div",{class:"card"}, h("div",{class:"tablewrap"}, table));
     if (!rows.length) card.appendChild(h("div",{class:"empty"}, S.list.length ? "No agents match these filters." : "No agents yet. Import a list or find agents in the Apollo finder."));
     card.appendChild(h("div",{class:"pager"},
@@ -1689,17 +1745,18 @@ var OBJECTIONS = [
 
 
   /* ================= OUTREACH ================= */
-  var O = {ch:"Email", seg:"", state:"", stage:"new", cur:null, tpl:null, subject:"", body:"", forId:null, q:""};
+  var O = {ch:"Email", seg:"", state:"", stage:"waiting", cur:null, tpl:null, subject:"", body:"", forId:null, q:""};
   function outQueue(){
     var q = O.q.trim().toLowerCase();
     return S.list.filter(function(p){
       if (p.status==="dnc") return false;
       if (q) return (C.displayName(p)+" "+p.company+" "+p.email+" "+p.city).toLowerCase().indexOf(q)>-1;
-      if (O.stage==="due"){ if (!(p.fu && p.fu<=TODAY)) return false; }
+      if (O.stage==="due"){ if (!(p.fu && p.fu<=TODAY) || p.waiting) return false; }
       else if (O.stage==="waiting"){ if (!p.waiting) return false; }
       else if (O.stage && p.status!==O.stage) return false;
-      if (O.seg && D(p).track!==O.seg) return false;
-      if (O.state && p.state!==O.state) return false;
+      if (O.seg==="2plus" && !(D(p).yrs!=null && D(p).yrs>=2)) return false;
+      else if (O.seg==="rookie" && D(p).track!=="rookie") return false;
+      if (!inScope(p)) return false;
       if (O.ch==="Email" && !p.email) return false;
       if (O.ch==="Text" && !(p.mobile||p.phone)) return false;
       return true;
@@ -1708,38 +1765,35 @@ var OBJECTIONS = [
   function sentToday(ch){ var n = 0; S.list.forEach(function(p){ var t = p.lastTouch; if (t && t.dir==="out" && t.ch===ch && t.at && t.at.slice(0,10)===new Date().toISOString().slice(0,10) && !/^Campaign/.test(t.what||"")) n++; }); return n; }
   function vOutreach(){
     var wrap = h("section",{class:"view"});
-    var tiles = h("div",{class:"today"});
-    [["Emails sent today",sentToday("email"),"var(--accent)"],["Texts sent today",sentToday("text"),"var(--good)"],["Replies waiting",S.list.filter(function(p){ return p.waiting; }).length,"var(--hot)"],["Opted in to texts",S.list.filter(function(p){ return p.sms; }).length,"var(--lead)"]].forEach(function(t,i){
-      var v = h("span",{class:"v num"},"0");
-      tiles.appendChild(h("div",{class:"kpi",style:"--c:"+t[2]}, h("span",{class:"k"},t[0]), v));
-      later(function(){ countUp(v, t[1], 800+i*100); });
+    var cnt = {waiting:0, due:0, "new":0};
+    scoped().forEach(function(p){ if (p.status==="dnc") return; if (p.waiting) cnt.waiting++; else if (p.fu && p.fu<=TODAY) cnt.due++; if (p.status==="new") cnt["new"]++; });
+    var tabs = h("div",{class:"worktabs",role:"tablist"});
+    [["waiting","Replies to answer","Agents who wrote back"],["due","Follow-ups due","Agents to check in with today"],["new","New leads","Agents you haven't contacted"]].forEach(function(t){
+      tabs.appendChild(h("button",{type:"button",role:"tab",class:"wtab","aria-selected":O.stage===t[0]?"true":"false",onclick:function(){ O.stage = t[0]; O.cur = null; O.forId = null; O.q = ""; renderView(true); }},
+        h("b",{class:"num"}, nf(cnt[t[0]])), h("span",null, t[1]), h("small",null, t[2])));
     });
-    wrap.appendChild(tiles);
+    wrap.appendChild(tabs);
+    var chSeg = h("div",{class:"seg",role:"group","aria-label":"Send by"});
+    ["Email","Text"].forEach(function(c){ chSeg.appendChild(h("button",{type:"button","aria-pressed":O.ch===c?"true":"false",onclick:function(){ O.ch = c; O.cur = null; O.forId = null; renderView(true); }}, c)); });
+    var segSeg = h("div",{class:"seg",role:"group","aria-label":"Experience"});
+    [["","Everyone"],["2plus","2+ years"],["rookie","New agents"]].forEach(function(x){ segSeg.appendChild(h("button",{type:"button","aria-pressed":O.seg===x[0]?"true":"false",onclick:function(){ O.seg = x[0]; O.cur = null; O.forId = null; renderView(true); }}, x[1])); });
+    wrap.appendChild(scopeBar([chSeg, segSeg]));
 
     var queue = outQueue();
     if (!O.cur || !byId(O.cur) || (!O.q && queue.indexOf(byId(O.cur))<0 && O.forId!==O.cur)) O.cur = queue[0] ? queue[0].id : null;
-    /* left: queue */
-    var chSeg = h("div",{class:"seg"});
-    ["Email","Text"].forEach(function(c){ chSeg.appendChild(h("button",{type:"button","aria-pressed":O.ch===c?"true":"false",onclick:function(){ O.ch = c; O.cur = null; O.forId = null; renderView(true); }}, c==="Email" ? "Email" : "Text")); });
-    function sel(id, label, val, opts, on){ var x = h("select",{class:"field",id:id,"aria-label":label,style:"width:100%"}); opts.forEach(function(o){ x.appendChild(h("option",{value:o[0]},o[1])); }); x.value = val; x.addEventListener("change", function(){ on(x.value); O.cur = null; O.forId = null; renderView(true); }); return x; }
-    var states = {}; S.list.forEach(function(p){ if (p.state) states[p.state] = (states[p.state]||0)+1; });
-    var find = h("input",{class:"field",id:"o_find",placeholder:"Find anyone by name or email",value:O.q,style:"width:100%"});
+    var find = h("input",{class:"field",id:"o_find",type:"search",placeholder:"Find a specific agent",value:O.q,style:"width:100%"});
     var fT; find.addEventListener("input", function(){ clearTimeout(fT); fT = setTimeout(function(){ O.q = find.value; O.cur = null; renderView(true); var f = $("#o_find"); if (f){ f.focus(); f.setSelectionRange(f.value.length, f.value.length); } }, 200); });
     var ql = h("div",{class:"queue"});
-    queue.slice(0,60).forEach(function(p, i){
-      var d = D(p);
+    queue.slice(0,80).forEach(function(p, i){
+      var d = D(p), lt = p.lastTouch || {};
       ql.appendChild(h("button",{type:"button",class:"qitem","data-id":p.id,"aria-current":p.id===O.cur?"true":"false",style:"animation:rise .4s var(--ease) both;animation-delay:"+Math.min(i*20,400)+"ms",onclick:function(){ O.cur = p.id; O.forId = null; renderView(true); }},
-        avatar(p,32), h("div",{style:"min-width:0"}, h("div",{class:"t"}, C.displayName(p)), h("div",{class:"d"}, [C.TRACK_LABEL[d.track], p.state, O.ch==="Email" ? p.email : C.fmtPhone(p.mobile||p.phone)].filter(Boolean).join(" · "))),
-        p.waiting ? h("span",{class:"chip hot"},"Reply") : h("span",{class:"num note"}, d.score)));
+        avatar(p,34), h("div",{style:"min-width:0"}, h("div",{class:"t"}, C.displayName(p)),
+          h("div",{class:"d"}, p.waiting && lt.body ? "“"+lt.body+"”" : [p.state, d.yrs!=null ? (d.yrs<1 ? "new agent" : Math.floor(d.yrs)+" yrs") : "", O.ch==="Email" ? p.email : C.fmtPhone(p.mobile||p.phone)].filter(Boolean).join(" · "))),
+        p.waiting ? h("span",{class:"chip hot"}, ago(lt.at) || "Reply") : p.fu && p.fu<=TODAY ? h("span",{class:"chip"},"Due") : null));
     });
-    if (!queue.length) ql.appendChild(h("div",{class:"empty"},"No one left in this queue. Change the filters above."));
-    var left = h("div",{class:"card"}, h("div",{class:"hd"}, h("h2",null,"Queue"), h("span",{class:"note"}, nf(queue.length)+" agents")),
-      h("div",{class:"bd",style:"display:flex;flex-direction:column;gap:10px"}, chSeg, find,
-        h("div",{class:"cols2"},
-          sel("o_stage","Stage",O.stage,[["new","Not contacted"],["contacted","Contacted"],["replied","Replied"],["waiting","Waiting on you"],["due","Follow-up due"],["booked","Call booked"],["","Any stage"]],function(v){ O.stage=v; }),
-          sel("o_seg","Segment",O.seg,[["","All segments"],["rookie","New agents"],["experienced","Experienced"],["leader","Veterans & leaders"]],function(v){ O.seg=v; })),
-        sel("o_state","State",O.state,[["","All states"]].concat(Object.keys(states).sort().map(function(k){ return [k,(C.STATES[k]||k)+" ("+nf(states[k])+")"]; })),function(v){ O.state=v; }),
-        ql));
+    if (!queue.length) ql.appendChild(h("div",{class:"empty"}, O.stage==="waiting" ? "No replies waiting. Nice work." : O.stage==="due" ? "No follow-ups due today." : "No agents match. Try another state or setting."));
+    var left = h("div",{class:"card"}, h("div",{class:"hd"}, h("h2",null,"Up next"), h("span",{class:"note"}, nf(queue.length)+" agents")),
+      h("div",{class:"bd",style:"display:flex;flex-direction:column;gap:10px"}, find, ql));
     /* right: composer */
     var p = O.cur ? byId(O.cur) : null, right;
     if (!p) right = h("div",{class:"card"}, h("div",{class:"empty"},"Pick an agent from the queue."));
