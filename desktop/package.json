@@ -1,0 +1,39 @@
+{
+  "name": "clearpoint-crm",
+  "productName": "ClearPoint CRM",
+  "version": "1.0.0",
+  "description": "ClearPoint Global recruiting CRM",
+  "author": "ClearPoint Global",
+  "main": "main.js",
+  "appUrl": "https://GITHUB_USER.github.io/clearpoint-crm/",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --publish always"
+  },
+  "dependencies": {
+    "electron-updater": "6.3.9"
+  },
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "com.clearpointglobal.crm",
+    "productName": "ClearPoint CRM",
+    "files": ["main.js", "offline.html", "package.json", "build/icon.png"],
+    "directories": { "buildResources": "build", "output": "dist" },
+    "publish": [{ "provider": "github", "owner": "GITHUB_USER", "repo": "clearpoint-crm", "releaseType": "release" }],
+    "mac": {
+      "category": "public.app-category.business",
+      "target": [{ "target": "dmg", "arch": ["universal"] }],
+      "identity": null,
+      "artifactName": "ClearPoint-CRM-Mac.${ext}"
+    },
+    "dmg": { "title": "ClearPoint CRM" },
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "artifactName": "ClearPoint-CRM-Setup.${ext}"
+    },
+    "nsis": { "oneClick": true, "perMachine": false, "shortcutName": "ClearPoint CRM" }
+  }
+}
