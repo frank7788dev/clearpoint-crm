@@ -5,7 +5,7 @@
   "description": "ClearPoint Global recruiting CRM",
   "author": "ClearPoint Global",
   "main": "main.js",
-  "appUrl": "https://GITHUB_USER.github.io/clearpoint-crm/",
+  "appUrl": "https://frank7788dev.github.io/clearpoint-crm/",
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder --publish always"
@@ -22,7 +22,7 @@
     "productName": "ClearPoint CRM",
     "files": ["main.js", "offline.html", "package.json", "build/icon.png"],
     "directories": { "buildResources": "build", "output": "dist" },
-    "publish": [{ "provider": "github", "owner": "GITHUB_USER", "repo": "clearpoint-crm", "releaseType": "release" }],
+    "publish": [{ "provider": "github", "owner": "frank7788dev", "repo": "clearpoint-crm", "releaseType": "release" }],
     "mac": {
       "category": "public.app-category.business",
       "target": [{ "target": "dmg", "arch": ["universal"] }],

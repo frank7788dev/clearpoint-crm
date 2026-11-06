@@ -16,5 +16,5 @@ Recruiting CRM for the ClearPoint Global team. Frank (fadybashir3218@gmail.com) 
 1. Supabase: create project, run `supabase/schema.sql` in SQL Editor, copy Project URL + anon key into `web/config.js`.
    In Authentication → URL Configuration set Site URL to the GitHub Pages address.
 2. GitHub: public repo `clearpoint-crm`; Settings → Pages → Source: GitHub Actions.
-3. Replace `GITHUB_USER` in `desktop/package.json`, push, then push a tag `v1.0.0` to build installers.
-4. Share `https://GITHUB_USER.github.io/clearpoint-crm/download.html` with the team.
+3. Replace `frank7788dev` in `desktop/package.json`, push, then push a tag `v1.0.0` to build installers.
+4. Share `https://frank7788dev.github.io/clearpoint-crm/download.html` with the team.
