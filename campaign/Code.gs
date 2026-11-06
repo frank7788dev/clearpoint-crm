@@ -58,6 +58,7 @@ function fill(t, first) { return t.split('{first}').join(first); }
 function setup() {
   ScriptApp.getProjectTriggers().forEach(function (t) { ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger('run').timeBased().everyHours(1).create();
+  ScriptApp.newTrigger('sendOutbox').timeBased().everyMinutes(5).create();
   const props = PropertiesService.getScriptProperties();
   if (!props.getProperty('start')) props.setProperty('start', new Date().toISOString());
   SpreadsheetApp.openById(SHEET_ID).getName(); // confirms access to the sheet
@@ -123,20 +124,26 @@ function classify(text) {
   return 'other';
 }
 
+function mark(ref, status) { ref.status = status; if (ref.sh) ref.sh.getRange(ref.r, ref.col).setValue(status); }
+
 function notifyMe(subject, body) {
   try { GmailApp.sendEmail(NOTIFY_TO, subject, body + '\n\n— ClearPoint CRM', { name: 'ClearPoint CRM' }); } catch (e) {}
 }
 
 // Tells the CRM what happened, signed with your Google account so nobody else can.
 function toCrm(email, event, what, body, when) {
-  if (!CRM_KEY || CRM_KEY.indexOf('PASTE') === 0) return;
+  return crm({ email: email, event: event, what: what, body: String(body || '').slice(0, 2000), when: when || '' });
+}
+function crm(payload) {
   try {
-    UrlFetchApp.fetch(CRM_URL, {
+    const r = UrlFetchApp.fetch(CRM_URL, {
       method: 'post', contentType: 'application/json', muteHttpExceptions: true,
       headers: { Authorization: 'Bearer ' + CRM_KEY, apikey: CRM_KEY, 'x-google-id-token': ScriptApp.getIdentityToken() },
-      payload: JSON.stringify({ email: email, event: event, what: what, body: String(body || '').slice(0, 2000), when: when || '' })
+      payload: JSON.stringify(payload)
     });
-  } catch (e) {}
+    if (r.getResponseCode() !== 200) { console.log('CRM ' + payload.event + ': ' + r.getResponseCode() + ' ' + r.getContentText().slice(0, 200)); return null; }
+    return JSON.parse(r.getContentText());
+  } catch (e) { console.log('CRM ' + payload.event + ': ' + e); return null; }
 }
 
 // Every agent row this mailbox emailed, by thread and by email.
@@ -152,6 +159,12 @@ function rowIndex() {
       ids.slice(TAG.length).split(',').forEach(function (id) { if (id) byThread[id] = ref; });
       byEmail[ref.email.toLowerCase()] = ref;
     }
+  });
+  const t = crm({ event: 'threads' });
+  ((t && t.threads) || []).forEach(function (x) {
+    if (byThread[x.thread]) return;
+    const ref = byEmail[String(x.email).toLowerCase()] || { email: x.email, first: x.first || 'there', status: '' };
+    byThread[x.thread] = ref;
   });
   return { byThread: byThread, byEmail: byEmail };
 }
@@ -170,23 +183,23 @@ function handleReplies(idx, me) {
     const key = 'm:' + last.getId();
     if (props.getProperty(key)) continue;                   // already handled
     props.setProperty(key, '1');
-    if (/mailer-daemon|postmaster/.test(from)) { ref.sh.getRange(ref.r, ref.col).setValue('Bounced'); continue; }
+    if (/mailer-daemon|postmaster/.test(from)) { mark(ref, 'Bounced'); continue; }
     const text = freshText(last), kind = classify(text);
     const already = /booking link sent|Call booked/.test(ref.status);
     if (kind === 'optout') {
-      ref.sh.getRange(ref.r, ref.col).setValue('Opted out');
+      mark(ref, 'Opted out');
       toCrm(ref.email, 'optout', 'Opted out by email', text);
       continue;
     }
     if (kind === 'yes' && !already) {
       th.reply(fill(BOOK_REPLY, ref.first));
-      ref.sh.getRange(ref.r, ref.col).setValue('Replied - booking link sent');
+      mark(ref, 'Replied - booking link sent');
       ref.status = 'Replied - booking link sent';
       toCrm(ref.email, 'replied', 'Replied: interested · booking link sent automatically', text);
       notifyMe('🔥 ' + ref.first + ' wants to talk: booking link sent', ref.first + ' (' + ref.email + ') replied:\n\n' + text.slice(0, 800) +
         '\n\nYour booking link went out automatically. You\'ll get another alert when they pick a time.');
     } else {
-      ref.sh.getRange(ref.r, ref.col).setValue('Replied - needs you');
+      mark(ref, 'Replied - needs you');
       ref.status = 'Replied - needs you';
       toCrm(ref.email, 'replied', 'Replied: needs your answer', text);
       notifyMe('💬 ' + ref.first + ' replied: needs you', ref.first + ' (' + ref.email + ') replied:\n\n' + text.slice(0, 800) +
@@ -200,6 +213,7 @@ function checkBookings(idx, me) {
   const props = PropertiesService.getScriptProperties();
   const now = new Date(), until = new Date(now.getTime() + 45 * 864e5);
   const events = CalendarApp.getDefaultCalendar().getEvents(now, until);
+  const first = !props.getProperty('evInit'); props.setProperty('evInit', '1');
   for (const ev of events) {
     const key = 'e:' + ev.getId() + ':' + ev.getStartTime().getTime();
     if (props.getProperty(key)) continue;
@@ -209,21 +223,68 @@ function checkBookings(idx, me) {
     const when = Utilities.formatDate(ev.getStartTime(), TZ, "EEE MMM d 'at' h:mm a");
     const day = Utilities.formatDate(ev.getStartTime(), TZ, 'yyyy-MM-dd');
     const agent = guests.map(function (g) { return idx.byEmail[g]; }).filter(Boolean)[0];
-    if (agent) {
-      agent.sh.getRange(agent.r, agent.col).setValue('Call booked ' + day);
-      toCrm(agent.email, 'booked', 'Call booked: ' + when, ev.getTitle(), day);
-    }
+    if (agent) mark(agent, 'Call booked ' + day);
+    toCrm(agent ? agent.email : guests[0], 'booked', 'Call booked: ' + when, ev.getTitle(), day);
+    if (first) continue;   // first run: just learn what's already on the calendar
     notifyMe('📅 Call booked: ' + (agent ? agent.first : guests[0]) + ' · ' + when,
       (agent ? agent.first + ' (' + agent.email + ')' : guests.join(', ')) + ' booked "' + ev.getTitle() + '" for ' + when + ' (Eastern).\n\nIt\'s on your Google Calendar with the Meet link.');
   }
 }
 
+// Copies your upcoming calls (next 30 days) into the CRM's Today's Calls list.
+function syncCalendar(me) {
+  const from = new Date(Date.now() - 864e5), to = new Date(Date.now() + 30 * 864e5);
+  const out = [];
+  CalendarApp.getDefaultCalendar().getEvents(from, to).forEach(function (ev) {
+    if (ev.isAllDayEvent()) return;
+    const guests = ev.getGuestList(true).filter(function (g) { return g.getEmail() && g.getEmail().toLowerCase() !== me; });
+    if (!guests.length) return;
+    const desc = String(ev.getDescription() || '') + ' ' + String(ev.getLocation() || '');
+    const meet = (desc.match(/https:\/\/meet\.google\.com\/[a-z0-9-]+/i) || [''])[0];
+    out.push({ id: ev.getId() + ':' + ev.getStartTime().getTime(), start: ev.getStartTime().toISOString(), end: ev.getEndTime().toISOString(),
+      title: ev.getTitle(), meet: meet, guest: guests[0].getEmail(), guestName: guests[0].getName() || '' });
+  });
+  crm({ event: 'calendar', events: out, from: from.toISOString(), to: to.toISOString() });
+}
+
+// Campaign numbers for the CRM's Home screen.
+function pushStats() {
+  const props = PropertiesService.getScriptProperties();
+  const today = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
+  const st = { sentToday: props.getProperty('day') === today ? +props.getProperty('sent') : 0, dailyLimit: dailyLimit(),
+    queued: 0, inSequence: 0, finished: 0, replied: 0, booked: 0, optedOut: 0, bounced: 0, total: 0, warmupDay: 0 };
+  const start = props.getProperty('start'); if (start) st.warmupDay = Math.floor((new Date() - new Date(start)) / 864e5) + 1;
+  batchSheets().forEach(function (sh) {
+    const d = sh.getDataRange().getValues(), iSt = d[0].indexOf('Status');
+    for (let r = 1; r < d.length; r++) {
+      const v = String(d[r][iSt]); st.total++;
+      if (v === 'Queued') st.queued++; else if (v === 'In sequence') st.inSequence++; else if (v === 'Finished') st.finished++;
+      else if (/^Replied/.test(v)) st.replied++; else if (/^Call booked/.test(v)) st.booked++; else if (v === 'Opted out') st.optedOut++; else if (v === 'Bounced') st.bounced++;
+    }
+  });
+  crm({ event: 'stats', stats: st });
+}
+
+// Emails you write in the CRM ("Send now") go out from this business mailbox within 5 minutes.
+function sendOutbox() {
+  const res = crm({ event: 'outbox_pull', limit: Math.min(20, MailApp.getRemainingDailyQuota() - 5) });
+  const items = (res && res.items) || [];
+  if (!items.length) return;
+  const results = items.map(function (it) {
+    try { return { id: it.id, ok: true, thread: sendTracked(it.to_email, it.subject || '(no subject)', it.body || '') }; }
+    catch (e) { return { id: it.id, ok: false, error: String(e.message || e) }; }
+  });
+  crm({ event: 'outbox_done', results: results });
+}
+
 // Sends follow-ups for agents this mailbox started, and first emails one state batch at a time.
-// Replies and bookings are checked every hour, day or night.
+// Replies, bookings, calendar and stats are checked every hour, day or night.
 function run() {
   const now = new Date();
   const me0 = Session.getActiveUser().getEmail().toLowerCase();
   try { const idx = rowIndex(); handleReplies(idx, me0); checkBookings(idx, me0); } catch (e) { console.log('replies: ' + e); }
+  try { syncCalendar(me0); } catch (e) { console.log('calendar: ' + e); }
+  try { pushStats(); } catch (e) { console.log('stats: ' + e); }
   const dow = +Utilities.formatDate(now, TZ, 'u'), hr = +Utilities.formatDate(now, TZ, 'H');
   if (dow > 5 || hr < 8 || hr >= 17) return;
   const props = PropertiesService.getScriptProperties();
