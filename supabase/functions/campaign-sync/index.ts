@@ -17,10 +17,15 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("ok");
   const idToken = req.headers.get("x-google-id-token") || "";
   if (!idToken) return json({ error: "forbidden" }, 403);
-  const info = await fetch("https://oauth2.googleapis.com/tokeninfo?id_token=" + encodeURIComponent(idToken)).then((r) => r.ok ? r.json() : null).catch(() => null);
-  if (!info || String(info.email_verified) !== "true" || !ALLOWED.includes(String(info.email).toLowerCase()) || Number(info.exp) * 1000 < Date.now()) {
-    return json({ error: "forbidden" }, 403);
-  }
+  let info: Record<string, unknown> | null = null, why = "";
+  try {
+    const r = await fetch("https://oauth2.googleapis.com/tokeninfo?id_token=" + encodeURIComponent(idToken));
+    if (r.ok) info = await r.json(); else why = "tokeninfo " + r.status;
+  } catch (e) { why = "tokeninfo unreachable: " + String(e).slice(0, 120); }
+  if (!info) return json({ error: "forbidden", why }, 403);
+  if (String(info.email_verified) !== "true") return json({ error: "forbidden", why: "email not verified" }, 403);
+  if (!ALLOWED.includes(String(info.email).toLowerCase())) return json({ error: "forbidden", why: "account not allowed" }, 403);
+  if (Number(info.exp) * 1000 < Date.now()) return json({ error: "forbidden", why: "token expired" }, 403);
   // deno-lint-ignore no-explicit-any
   let p: any;
   try { p = await req.json(); } catch { return json({ error: "bad json" }, 400); }
