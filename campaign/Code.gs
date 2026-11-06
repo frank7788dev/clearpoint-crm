@@ -1,5 +1,5 @@
 // TASK: the Run button runs this
-function task() { setup(); testNotification(); }
+function task() { setup(); const me = Session.getActiveUser().getEmail().toLowerCase(); syncCalendar(me); pushStats(); }
 // END TASK
 // ClearPoint Global recruiting emails, sent from fadybashir@clearpointglobal.org.
 // Sends a 3-email sequence to the agents in the Google Sheet, stops for anyone who
