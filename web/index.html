@@ -950,7 +950,7 @@ var OBJECTIONS = [
   });
   function countUp(el, to, dur, suffix){
     suffix = suffix || "";
-    if (REDUCED){ el.textContent = (typeof to==="number" && to%1 ? to.toFixed(1) : nf(to))+suffix; return; }
+    if (REDUCED || performance.now() < (S.softUntil||0)){ el.textContent = (typeof to==="number" && to%1 ? to.toFixed(1) : nf(to))+suffix; return; }
     var t0 = performance.now(), dec = to%1 !== 0;
     (function f(t){
       var k = Math.min(1,(t-t0)/(dur||1100)), e = 1-Math.pow(1-k,4), v = to*e;
@@ -1474,6 +1474,7 @@ var OBJECTIONS = [
     var box = $("#view");
     var fn = {dashboard:vDashboard, team:vTeam, outreach:vOutreach, prospects:vProspects, pipeline:vPipeline, inbox:vInboxNew, recruits:vRecruits, clients:vClients, reports:vReports, apollo:vApollo, scripts:vScripts, settings:vSettings}[S.view];
     var y = $("#main").scrollTop;
+    if (soft) S.softUntil = performance.now()+400;   /* refreshes show numbers at once; only a fresh page counts up */
     var el = fn(soft);
     if (soft) el.style.animation = "none";
     box.textContent = ""; box.appendChild(el);
