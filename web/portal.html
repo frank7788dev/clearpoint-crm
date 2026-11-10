@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--navy:#c9a55a;--ink:#f1ead9;--ink2:#cbc3b0;--ink3:#8d877a;--line:#26252a;--bg:#0a0a0c;--surface:#131316;--gold:#c9a55a;--goldsoft:rgba(201,165,90,.14);--good:#7cc29a;--bad:#e06c62}
+:root{--navy:#0b0b0c;--ink:#0b0b0c;--ink2:#3f4147;--ink3:#7a7c83;--line:#e4e4df;--bg:#f7f7f5;--surface:#ffffff;--gold:#c8a45c;--goldsoft:rgba(200,164,92,.18);--good:#23795a;--bad:#b3372e}
 *{box-sizing:border-box}
 body{margin:0;font:15px/1.55 Jost,system-ui,sans-serif;color:var(--ink);background:var(--bg)}
 .top{background:#050506 radial-gradient(700px 360px at 50% 20%,rgba(201,165,90,.12),transparent 65%);color:#f1ead9;padding:36px 20px 70px;text-align:center}
@@ -17,20 +17,20 @@ body{margin:0;font:15px/1.55 Jost,system-ui,sans-serif;color:var(--ink);backgrou
 h1{font:500 26px/1.2 Cinzel,serif;letter-spacing:.08em;margin:18px 0 6px}
 .sub{color:#cbc3b0;font-size:14px;max-width:520px;margin:0 auto}
 .wrap{max-width:640px;margin:-40px auto 40px;padding:0 16px}
-.card{background:var(--surface);border:1px solid var(--line);border-top:1px solid var(--gold);box-shadow:0 30px 60px -24px rgba(0,0,0,.9);padding:22px}
+.card{background:var(--surface);border:1px solid var(--line);border-top:1px solid var(--gold);box-shadow:0 24px 50px -28px rgba(11,11,12,.35);padding:22px}
 .item{display:flex;gap:14px;align-items:center;padding:16px 0;border-bottom:1px solid var(--line)}
 .item:last-child{border-bottom:0}
 .ck{width:30px;height:30px;flex:none;display:grid;place-items:center;border:1px solid var(--line);font-weight:700;color:var(--ink3)}
 .item.done .ck{background:var(--goldsoft);border-color:var(--gold);color:var(--gold)}
 .item .t{flex:1;min-width:0} .item .t b{display:block} .item .t small{color:var(--ink3);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .btn{all:unset;cursor:pointer;padding:9px 14px;border:1px solid var(--navy);color:var(--navy);font-weight:600;font-size:13px;white-space:nowrap}
-.btn.primary{background:linear-gradient(135deg,#f3dfa6,#d4b066 30%,#a8822f 60%,#e2c67e);color:#141210;border:0}
+.btn.primary{background:#0b0b0c;color:#fff;border-color:#0b0b0c;box-shadow:inset 0 -2px 0 var(--gold)}
 .btn[aria-disabled=true]{opacity:.5;pointer-events:none}
 input[type=file]{position:absolute;width:1px;height:1px;opacity:0}
 .note{color:var(--ink3);font-size:12.5px;margin-top:14px}
 .msg{padding:12px 14px;border:1px solid var(--line);background:var(--goldsoft);margin-bottom:14px;font-size:14px}
-.msg.err{background:rgba(224,108,98,.1);border-color:rgba(224,108,98,.35);color:#f2b2ab}
-.bar{height:4px;background:#24232a;margin:4px 0 8px}.bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .8s}
+.msg.err{background:#fbecea;border-color:#eec5c0;color:var(--bad)}
+.bar{height:4px;background:#e8e8e4;margin:4px 0 8px}.bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .8s}
 footer{text-align:center;color:var(--ink3);font-size:12px;margin:24px 0}
 </style>
 </head>

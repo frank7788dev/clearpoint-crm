@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("cpg-theme")||"night")}catch(e){document.documentElement.setAttribute("data-theme","night")}</script>
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("cpg-look")||"day")}catch(e){document.documentElement.setAttribute("data-theme","day")}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ClearPoint Global CRM</title>
@@ -16,8 +16,8 @@
 /* ClearPoint Global CRM: one stylesheet.
    Idea: the gold crest on black stone is the only loud thing. Everything else is a quiet, dense working
    surface: one grotesk for reading, Cinzel (the logo's capitals) only for the brand, page titles and the
-   greeting, gold only for the primary action, the current place, and wins. Night is the default; day
-   mode swaps the working surface to white paper and keeps the black rail so the crest never changes. */
+   greeting. The default look is white pages with black type and black buttons, a black rail for the
+   crest, and gold only for the current place, selections, progress and wins. Night mode is optional. */
 :root{
   --display:"Cinzel","Trajan Pro",Georgia,serif;
   --body:"Hanken Grotesk","Helvetica Neue",Arial,system-ui,sans-serif;
@@ -36,10 +36,10 @@
   color-scheme:dark;
 }
 [data-theme="day"]{
-  --bg:#f4f4f1; --surface:#ffffff; --surface-2:#f0efeb; --surface-3:#e6e5df;
-  --ink:#15161a; --ink-2:#474a53; --ink-3:#7c7f88; --line:#e3e2dc; --line-2:#c9c8c0;
-  --accent:#8a6a22; --accent-ink:#fff; --accent-soft:rgba(160,124,44,.12); --gold-soft:rgba(160,124,44,.12);
-  --btn-bg:#15161a; --btn-ink:#ecd9a6;
+  --bg:#f7f7f5; --surface:#ffffff; --surface-2:#f2f2ef; --surface-3:#e8e8e4;
+  --ink:#0b0b0c; --ink-2:#3f4147; --ink-3:#7a7c83; --line:#e4e4df; --line-2:#c8c8c1;
+  --accent:#8a6a22; --accent-ink:#fff; --accent-soft:rgba(200,164,92,.16); --gold-soft:rgba(200,164,92,.16);
+  --btn-bg:#0b0b0c; --btn-ink:#ffffff;
   --good:#23795a; --warn:#946c14; --bad:#b3372e; --hot:#b3372e; --info:#2f63a8;
   --rookie:#2f63a8; --exp:#8a6a22; --lead:#15161a;
   --shadow:0 1px 2px rgba(20,21,26,.05); --shadow-lift:0 24px 60px -24px rgba(20,21,26,.35);
@@ -428,6 +428,20 @@ tbody tr.open{box-shadow:inset 2px 0 0 var(--gold)}
 .gerr{font-size:13px;color:var(--bad);min-height:18px}
 .glinks{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 
+
+/* white & black look: black headers on tables, gold underline on the page title, black primary with a gold edge */
+[data-theme="day"] .top h1{color:#0b0b0c}
+[data-theme="day"] .top h1::after{content:"";display:block;width:36px;height:2px;background:var(--gold);margin-top:8px}
+[data-theme="day"] .btn.primary,[data-theme="day"] .hero-band .pill.cta{box-shadow:inset 0 -2px 0 var(--gold)}
+[data-theme="day"] th{color:#0b0b0c;font-weight:600;border-bottom-color:#0b0b0c}
+[data-theme="day"] .card{box-shadow:0 1px 2px rgba(11,11,12,.04)}
+[data-theme="day"] .avatar{background:#0b0b0c!important;color:var(--gold-2);border-color:#0b0b0c}
+[data-theme="day"] .bigact b,[data-theme="day"] .ctile b{color:var(--ink)}
+[data-theme="day"] .wtab[aria-selected="true"]{background:#0b0b0c;border-color:#0b0b0c;color:#fff}
+[data-theme="day"] .wtab[aria-selected="true"] b{color:var(--gold-2)} [data-theme="day"] .wtab[aria-selected="true"] small{color:#b9b6ad}
+[data-theme="day"] .seg button[aria-pressed="true"]{background:#0b0b0c;color:#fff;box-shadow:none}
+[data-theme="day"] .pill[aria-pressed="true"],[data-theme="day"] .schip[aria-pressed="true"]{background:#0b0b0c;border-color:#0b0b0c;color:#fff}
+[data-theme="day"] .schip[aria-pressed="true"] span,[data-theme="day"] .pill[aria-pressed="true"] .n{color:var(--gold-2)}
 @media (max-width:1100px){
   .kpis{grid-template-columns:repeat(3,minmax(0,1fr))} .kpi:nth-child(3){border-right:0} .kpi:nth-child(-n+3){border-bottom:1px solid var(--line)}
   .grid2,.inbox,.finder,.outreach,.bigacts,.worktabs{grid-template-columns:1fr} .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -1342,7 +1356,7 @@ var OBJECTIONS = [
   var ROLE_LABEL = {owner:"Owner", manager:"Manager", recruiter:"Recruiter", pending:"Waiting for approval", disabled:"Access paused"};
   function renderMe(){
     var box = $("#credits"); box.textContent = ""; box.style.cursor = ""; box.onclick = null;
-    add(box, [h("span",null, ROLE_LABEL[S.me.role]), h("b",null, S.me.full_name || S.settings.myName || S.me.email.split("@")[0]), h("span",{style:"word-break:break-all"}, S.me.email), h("button",{type:"button",class:"btn ghost",onclick:function(){ var t = document.documentElement.getAttribute("data-theme")==="day" ? "night" : "day"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("cpg-theme", t); } catch(e){} renderMe(); }}, document.documentElement.getAttribute("data-theme")==="day" ? "Switch to night mode" : "Switch to day mode"), h("button",{type:"button",class:"btn ghost",onclick:function(){ newPassword(true); }},"Change password"), signOutBtn()]);
+    add(box, [h("span",null, ROLE_LABEL[S.me.role]), h("b",null, S.me.full_name || S.settings.myName || S.me.email.split("@")[0]), h("span",{style:"word-break:break-all"}, S.me.email), h("button",{type:"button",class:"btn ghost",onclick:function(){ var t = document.documentElement.getAttribute("data-theme")==="day" ? "night" : "day"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("cpg-look", t); } catch(e){} renderMe(); }}, document.documentElement.getAttribute("data-theme")==="day" ? "Switch to night mode" : "Switch to day mode"), h("button",{type:"button",class:"btn ghost",onclick:function(){ newPassword(true); }},"Change password"), signOutBtn()]);
     $$('.nav[data-view="team"]').forEach(function(b){ b.hidden = !isLead(); });
     $$('.nav[data-view="recruits"],.nav[data-view="clients"],.nav[data-view="reports"]').forEach(function(b){ b.hidden = !isLead(); });
     $$('.nav[data-view="apollo"]').forEach(function(b){ b.hidden = A.state!=="ready"; });
