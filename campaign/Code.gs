@@ -374,7 +374,7 @@ function morning() {
 // is copied to the CRM so the two agree. Safe to run again.
 function backfill() {
   const props = PropertiesService.getScriptProperties();
-  if (props.getProperty('backfilled') === '2') return;
+  if (props.getProperty('backfilled') === '3') return;
   const items = [], replied = [], bounced = [];
   batchSheets().forEach(function (sh) {
     const d = sh.getDataRange().getValues(), H = d[0];
@@ -384,14 +384,14 @@ function backfill() {
       if (!email || step < 1) continue;
       let at = ''; try { at = new Date(d[r][iL]).toISOString(); } catch (e) {}
       items.push({ email: email, what: 'Campaign email ' + step + ' sent', sub: fill(E1_SUBJ, String(d[r][iF]).trim() || 'there'), at: at || undefined });
-      if (/^Replied - needs you/.test(st)) replied.push([email, String(d[r][iT]).replace(TAG, '').split(',')[0]]);
+      if (/^Replied/.test(st)) replied.push([email, String(d[r][iT]).indexOf(TAG) === 0 ? String(d[r][iT]).replace(TAG, '').split(',')[0] : '', /booking link sent/.test(st)]);
       if (st === 'Bounced') bounced.push(email);
     }
   });
-  for (let i = 0; i < items.length; i += 400) crm({ event: 'contacted', items: items.slice(i, i + 400) });
-  replied.forEach(function (x) { toCrm(x[0], 'replied', 'Replied: needs your answer', '', '', x[1]); });
+  for (let i = 0; i < items.length; i += 400) crm({ event: 'contacted', items: items.slice(i, i + 400), no_log: props.getProperty('backfilled') === '2' });
+  replied.forEach(function (x) { toCrm(x[0], 'replied', x[2] ? 'Replied: interested · booking link sent automatically' : 'Replied: needs your answer (check your Gmail)', '', '', x[1]); });
   bounced.forEach(function (e) { crm({ event: 'bounced', email: e }); });
-  props.setProperty('backfilled', '2');
+  props.setProperty('backfilled', '3');
   console.log('backfill: ' + items.length + ' sent, ' + replied.length + ' replied, ' + bounced.length + ' bounced');
 }
 
