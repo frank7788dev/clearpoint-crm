@@ -1,5 +1,5 @@
 // TASK: the Run button runs this
-function task() { setup(); const me = Session.getActiveUser().getEmail().toLowerCase(); syncCalendar(me); pushStats(); }
+function task() { setup(); backfill(); const me = Session.getActiveUser().getEmail().toLowerCase(); syncCalendar(me); pushStats(); }
 // END TASK
 // ClearPoint Global recruiting emails, sent from fadybashir@clearpointglobal.org.
 // Sends a 3-email sequence to the agents in the Google Sheet, stops for anyone who
@@ -175,7 +175,7 @@ function rowIndex() {
 function handleReplies(idx, me) {
   const props = PropertiesService.getScriptProperties();
   const threads = GmailApp.search('newer_than:3d -from:me -in:sent', 0, 100);
-  for (const th of threads) {
+  for (const th of threads) { try {
     const ref = idx.byThread[th.getId()];
     if (!ref) continue;
     const msgs = th.getMessages(), last = msgs[msgs.length - 1];
@@ -183,13 +183,13 @@ function handleReplies(idx, me) {
     if (from.indexOf(me) !== -1) continue;                 // we already answered
     const key = 'm:' + last.getId();
     if (props.getProperty(key)) continue;                   // already handled
-    props.setProperty(key, '1');
-    if (/mailer-daemon|postmaster/.test(from)) { mark(ref, 'Bounced'); continue; }
+    if (/mailer-daemon|postmaster/.test(from)) { mark(ref, 'Bounced'); crm({ event: 'bounced', email: ref.email }); props.setProperty(key, '1'); continue; }
     const text = freshText(last), kind = classify(text);
     const already = /booking link sent|Call booked/.test(ref.status);
     if (kind === 'optout') {
       mark(ref, 'Opted out');
       toCrm(ref.email, 'optout', 'Opted out by email', text, '', th.getId());
+      props.setProperty(key, '1');
       continue;
     }
     if (kind === 'yes' && !already) {
@@ -206,7 +206,8 @@ function handleReplies(idx, me) {
       notifyMe('💬 ' + ref.first + ' replied: needs you', ref.first + ' (' + ref.email + ') replied:\n\n' + text.slice(0, 800) +
         '\n\nOpen fadybashir@clearpointglobal.org to answer. Their booking link: ' + BOOKING_URL);
     }
-  }
+    props.setProperty(key, '1');   // only once it is fully handled, so a failed send is retried next hour
+  } catch (e) { console.log('reply ' + th.getId() + ': ' + e); } }
 }
 
 // Finds calls booked on your calendar (from the booking page or any invite with an agent on it).
@@ -254,7 +255,7 @@ function pushStats() {
   const today = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
   const st = { sentToday: props.getProperty('day') === today ? +props.getProperty('sent') : 0, dailyLimit: dailyLimit(),
     queued: 0, inSequence: 0, finished: 0, replied: 0, booked: 0, optedOut: 0, bounced: 0, total: 0, warmupDay: 0,
-    bounces24: +props.getProperty('bounces24') || 0, sent24: +props.getProperty('sent24') || 0, pausedUntil: isPaused() ? props.getProperty('pausedUntil') : '' };
+    quotaLeft: MailApp.getRemainingDailyQuota(), bounces24: +props.getProperty('bounces24') || 0, sent24: +props.getProperty('sent24') || 0, pausedUntil: isPaused() ? props.getProperty('pausedUntil') : '' };
   const start = props.getProperty('start'); if (start) st.warmupDay = Math.floor((new Date() - new Date(start)) / 864e5) + 1;
   batchSheets().forEach(function (sh) {
     const d = sh.getDataRange().getValues(), iSt = d[0].indexOf('Status');
@@ -269,7 +270,11 @@ function pushStats() {
 
 // Emails you write in the CRM ("Send now") go out from this business mailbox within 5 minutes.
 function sendOutbox() {
-  const res = crm({ event: 'outbox_pull', limit: Math.min(25, MailApp.getRemainingDailyQuota() - 5), only_single: isPaused() });
+  // Google caps how many emails this mailbox may send per day. Keep a few in reserve for replies
+  // and alerts, and leave anything that doesn't fit in the queue for later instead of failing it.
+  const left = MailApp.getRemainingDailyQuota();
+  if (left <= 2) return;
+  const res = crm({ event: 'outbox_pull', limit: Math.min(25, left - 2), batch_limit: Math.max(0, Math.min(25, left - 12)), only_single: isPaused() });
   const items = (res && res.items) || [];
   if (!items.length) return;
   // never double-email someone the Sheet campaign already wrote to
@@ -278,7 +283,9 @@ function sendOutbox() {
     const d = sh.getDataRange().getValues(), H = d[0], iE = H.indexOf('Email'), iS = H.indexOf('Step'), iSt = H.indexOf('Status');
     for (let r = 1; r < d.length; r++) inSheet[String(d[r][iE]).trim().toLowerCase()] = { sh: sh, r: r + 1, col: iSt + 1, step: +d[r][iS] || 0, status: String(d[r][iSt]) };
   });
+  let full = false;
   const results = items.map(function (it) {
+    if (full) return { id: it.id, requeue: true };
     const row = inSheet[String(it.to_email).trim().toLowerCase()];
     if (it.kind === 'batch' && row && row.step > 0) return { id: it.id, ok: false, error: 'Skipped: already emailed by the campaign' };
     try {
@@ -291,7 +298,11 @@ function sendOutbox() {
       countSend();
       if (row && row.step === 0 && row.status === 'Queued') row.sh.getRange(row.r, row.col).setValue('Skipped (emailed from CRM)');
       return { id: it.id, ok: true, thread: thread };
-    } catch (e) { return { id: it.id, ok: false, error: String(e.message || e) }; }
+    } catch (e) {
+      const msg = String(e.message || e);
+      if (/too many times|quota|limit exceeded/i.test(msg)) { full = true; return { id: it.id, requeue: true }; }
+      return { id: it.id, ok: false, error: msg };
+    }
   });
   crm({ event: 'outbox_done', results: results });
 }
@@ -359,6 +370,31 @@ function morning() {
   notifyMe('☀️ ClearPoint today: ' + calls.length + ' call' + (calls.length === 1 ? '' : 's') + ', ' + (d.waiting || 0) + ' waiting on you', lines.join('\n'));
 }
 
+// One-time catch-up: everything the campaign already sent, plus replies and bounces it saw,
+// is copied to the CRM so the two agree. Safe to run again.
+function backfill() {
+  const props = PropertiesService.getScriptProperties();
+  if (props.getProperty('backfilled') === '2') return;
+  const items = [], replied = [], bounced = [];
+  batchSheets().forEach(function (sh) {
+    const d = sh.getDataRange().getValues(), H = d[0];
+    const iE = H.indexOf('Email'), iS = H.indexOf('Step'), iL = H.indexOf('Last Sent'), iSt = H.indexOf('Status'), iF = H.indexOf('First Name'), iT = H.indexOf('Thread ID');
+    for (let r = 1; r < d.length; r++) {
+      const step = +d[r][iS] || 0, email = String(d[r][iE]).trim(), st = String(d[r][iSt]);
+      if (!email || step < 1) continue;
+      let at = ''; try { at = new Date(d[r][iL]).toISOString(); } catch (e) {}
+      items.push({ email: email, what: 'Campaign email ' + step + ' sent', sub: fill(E1_SUBJ, String(d[r][iF]).trim() || 'there'), at: at || undefined });
+      if (/^Replied - needs you/.test(st)) replied.push([email, String(d[r][iT]).replace(TAG, '').split(',')[0]]);
+      if (st === 'Bounced') bounced.push(email);
+    }
+  });
+  for (let i = 0; i < items.length; i += 400) crm({ event: 'contacted', items: items.slice(i, i + 400) });
+  replied.forEach(function (x) { toCrm(x[0], 'replied', 'Replied: needs your answer', '', '', x[1]); });
+  bounced.forEach(function (e) { crm({ event: 'bounced', email: e }); });
+  props.setProperty('backfilled', '2');
+  console.log('backfill: ' + items.length + ' sent, ' + replied.length + ' replied, ' + bounced.length + ' bounced');
+}
+
 // Sends follow-ups for agents this mailbox started, and first emails one state batch at a time.
 // Replies, bookings, calendar and stats are checked every hour, day or night.
 function run() {
@@ -373,11 +409,12 @@ function run() {
   const props = PropertiesService.getScriptProperties();
   const today = Utilities.formatDate(now, TZ, 'yyyy-MM-dd');
   let sent = props.getProperty('day') === today ? +props.getProperty('sent') : 0;
-  let budget = Math.min(PER_RUN, dailyLimit() - sent, MailApp.getRemainingDailyQuota() - 1);
+  let budget = Math.min(PER_RUN, dailyLimit() - sent, MailApp.getRemainingDailyQuota() - 10);
   if (budget <= 0) return;
   const me = Session.getActiveUser().getEmail().toLowerCase();
   const sheets = batchSheets();
   let newSendsDone = false;
+  const told = [];   // what went out this run, reported to the CRM so both always agree
   const contacted = {};
   sheets.forEach(function (s) { const d = s.getDataRange().getValues(), h = d[0], ie = h.indexOf('Email'), is = h.indexOf('Step');
     for (let r = 1; r < d.length; r++) if (+d[r][is] > 0) contacted[String(d[r][ie]).trim().toLowerCase()] = 1; });
@@ -402,21 +439,23 @@ function run() {
             contacted[email.toLowerCase()] = 1;
             row[iT] = TAG + sendTracked(email, fill(E1_SUBJ, first), fill(E1, first));
             row[iS] = 1; row[iSt] = 'In sequence';
+            told.push({ email: email, what: 'Campaign email 1 sent', sub: fill(E1_SUBJ, first) });
           } else if (pass === 1 && step >= 1 && step < 3) {
             if (String(row[iT]).indexOf(TAG) !== 0) continue; // the old Gmail project finishes its own
             if ((now - new Date(row[iL])) / 864e5 < DAYS_BETWEEN) continue;
             const r2 = theyReplied(row[iT], me);
-            if (r2) { if (r2 === 'Bounced') { row[iSt] = r2; changed.push(r); } else if (row[iSt] === 'In sequence') { row[iSt] = 'Replied - needs you'; changed.push(r); notifyMe('💬 ' + first + ' replied', first + ' (' + email + ') replied to your email. Open fadybashir@clearpointglobal.org to answer.'); } continue; }
+            if (r2) { if (r2 === 'Bounced') { row[iSt] = r2; changed.push(r); crm({ event: 'bounced', email: email }); } else if (row[iSt] === 'In sequence') { row[iSt] = 'Replied - needs you'; changed.push(r); toCrm(email, 'replied', 'Replied: needs your answer', '', '', String(row[iT]).slice(TAG.length).split(',')[0]); notifyMe('💬 ' + first + ' replied', first + ' (' + email + ') replied to your email. Open fadybashir@clearpointglobal.org to answer.'); } continue; }
             if (step === 1) {
               row[iT] += ',' + sendTracked(email, 'Re: ' + fill(E1_SUBJ, first), fill(E2, first));
-              row[iS] = 2;
+              row[iS] = 2; told.push({ email: email, what: 'Campaign email 2 sent', sub: 'Re: ' + fill(E1_SUBJ, first) });
             } else {
               row[iT] += ',' + sendTracked(email, E3_SUBJ, fill(E3, first));
-              row[iS] = 3; row[iSt] = 'Finished';
+              row[iS] = 3; row[iSt] = 'Finished'; told.push({ email: email, what: 'Campaign email 3 sent', sub: E3_SUBJ });
             }
           } else continue;
           row[iL] = now; budget--; sent++; changed.push(r);
         } catch (e) {
+          if (/too many times|quota|limit exceeded/i.test(String(e.message))) { budget = 0; break; }   // Google's daily limit: pick up next run
           row[iSt] = 'Error: ' + String(e.message).slice(0, 80); changed.push(r);
         }
       }
@@ -424,6 +463,7 @@ function run() {
       if (pass === 2 && hasQueued) newSendsDone = true;
     }
   }
+  if (told.length) crm({ event: 'contacted', items: told });
   if (props.getProperty('day') && props.getProperty('day') !== today) props.setProperty('prev', props.getProperty('sent') || '0');
   props.setProperties({ day: today, sent: String(sent) });
 }

@@ -109,15 +109,21 @@ Deno.serve(async (req) => {
   }
 
   if (event === "outbox_pull") {
-    const limit = Math.max(0, Math.min(30, Number(p.limit) || 10));
+    const limit = Math.max(0, Math.min(30, Number(p.limit ?? 10) || 0));
     // anything stuck "sending" for 30+ minutes failed in the middle: report it rather than risk a double send
     await sb.from("outbox").update({ status: "error", error: "Sending was interrupted. Check Sent mail before trying again." }).eq("status", "sending").lt("created_at", new Date(Date.now() - 30 * 6e4).toISOString());
     if (!limit) return json({ items: [] });
-    let q = sb.from("outbox").select("id,agent_id,to_email,subject,body,kind,reply_thread").eq("status", "queued").lte("scheduled_for", now);
-    if (p.only_single) q = q.neq("kind", "batch");
-    const { data, error } = await q.order("scheduled_for").limit(limit);
-    if (error) return json({ error: error.message }, 500);
-    let items = data || [];
+    // replies and one-off emails first, then the batch queue in order
+    const cols = "id,agent_id,to_email,subject,body,kind,reply_thread";
+    const one = await sb.from("outbox").select(cols).eq("status", "queued").lte("scheduled_for", now).neq("kind", "batch").order("scheduled_for").limit(limit);
+    if (one.error) return json({ error: one.error.message }, 500);
+    let items = one.data || [];
+    const room = Math.max(0, Math.min(limit - items.length, Number(p.batch_limit ?? limit)));
+    if (!p.only_single && room > 0) {
+      const many = await sb.from("outbox").select(cols).eq("status", "queued").lte("scheduled_for", now).eq("kind", "batch").order("scheduled_for").limit(room);
+      if (many.error) return json({ error: many.error.message }, 500);
+      items = items.concat(many.data || []);
+    }
     // batch first-emails: skip anyone who was contacted, replied or opted out since it was scheduled
     const batchIds = items.filter((x) => x.kind === "batch" && x.agent_id).map((x) => x.agent_id);
     if (batchIds.length) {
@@ -145,6 +151,7 @@ Deno.serve(async (req) => {
     for (const r of results) {
       const { data: ob } = await sb.from("outbox").select("*").eq("id", r.id).maybeSingle();
       if (!ob) continue;
+      if (r.requeue) { await sb.from("outbox").update({ status: "queued" }).eq("id", r.id); continue; }   // Google's daily limit: try again later
       if (!r.ok) { await sb.from("outbox").update({ status: "error", error: String(r.error || "failed").slice(0, 300) }).eq("id", r.id); continue; }
       await sb.from("outbox").update({ status: "sent", thread_id: String(r.thread || ""), sent_at: now }).eq("id", r.id);
       if (!ob.agent_id) continue;
@@ -160,6 +167,45 @@ Deno.serve(async (req) => {
       await sb.from("activities").insert({ agent_id: ag.id, user_id: ob.created_by, ch: "email", dir: "out", what: "Email sent from business email", sub: ob.subject, body: ob.body, at: now });
     }
     return json({ ok: true });
+  }
+
+  // The Sheet campaign sent these agents an email: show them as contacted in the CRM too.
+  if (event === "contacted") {
+    const items: { email: string; what?: string; sub?: string; at?: string }[] = Array.isArray(p.items) ? p.items.slice(0, 1000) : [];
+    const by: Record<string, { what?: string; sub?: string; at?: string }> = {};
+    items.forEach((x) => { const e = String(x.email || "").trim().toLowerCase(); if (e) by[e] = x; });
+    const emails = Object.keys(by);
+    let matched = 0;
+    for (let i = 0; i < emails.length; i += 150) {
+      const { data: ags } = await sb.from("agents").select("id,email,status,fu,last_touch").in("email", emails.slice(i, i + 150));
+      const acts: Record<string, unknown>[] = [];
+      await Promise.all((ags || []).map((a) => {
+        const x = by[String(a.email).toLowerCase()] || {}, at = x.at || now, what = String(x.what || "Campaign email sent").slice(0, 200);
+        const lt = a.last_touch as { at?: string } | null;
+        acts.push({ agent_id: a.id, user_id: null, ch: "email", dir: "out", what, sub: String(x.sub || "").slice(0, 200), body: "", at });
+        matched++;
+        const patch: Record<string, unknown> = {};
+        if (a.status === "new") patch.status = "contacted";
+        if (!lt || !lt.at || lt.at < at) patch.last_touch = { at, ch: "email", dir: "out", what, body: "" };
+        if (!Object.keys(patch).length) return Promise.resolve();
+        return sb.from("agents").update(patch).eq("id", a.id);
+      }));
+      if (acts.length && !p.no_log) await sb.from("activities").insert(acts);
+    }
+    return json({ matched });
+  }
+
+  // An address bounced: keep the agent (phone may still work) but take the dead email off so nothing sends to it again.
+  if (event === "bounced") {
+    const email = String(p.email || "").trim().toLowerCase();
+    if (!email) return json({ matched: 0 });
+    const { data: ags } = await sb.from("agents").select("id,notes").eq("email", email).limit(3);
+    for (const a of ags || []) {
+      await sb.from("agents").update({ email: "", waiting: false, notes: ((a.notes || "") + "\nEmail bounced and was removed: " + email).trim(), last_touch: { at: now, ch: "email", dir: "note", what: "Email bounced: address removed", body: "" } }).eq("id", a.id);
+      await sb.from("activities").insert({ agent_id: a.id, user_id: null, ch: "email", dir: "note", what: "Email bounced: address removed", body: email, at: now });
+    }
+    await sb.from("outbox").update({ status: "error", error: "Address bounced" }).eq("status", "queued").eq("to_email", email);
+    return json({ matched: (ags || []).length });
   }
 
   if (event === "digest") {
