@@ -749,7 +749,7 @@ var Core = (function(){
     });
     return out;
   }
-  function blank(src, todayIso){ return {id:uid(), first:"", last:"", email:"", phone:"", mobile:"", company:"", title:"", kind:"", city:"", state:"", zip:"", lic:"", npn:"", lines:"", linkedin:"", keywords:"", notes:"", source:src, status:"new", tier:"", sms:null, exported:"", added:todayIso, fu:"", lastTouch:null}; }
+  function blank(src, todayIso){ return {id:C.uid(), first:"", last:"", email:"", phone:"", mobile:"", company:"", title:"", kind:"", city:"", state:"", zip:"", lic:"", npn:"", lines:"", linkedin:"", keywords:"", notes:"", source:src, status:"new", tier:"", sms:null, exported:"", added:todayIso, fu:"", lastTouch:null}; }
 
   function csvCell(v){ v = v==null ? "" : String(v); return /[",\n\r]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
   function slug(s){ return String(s||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,30); }
@@ -2504,7 +2504,7 @@ var OBJECTIONS = [
   }
   function clientPrem(c){ return (c.policies||[]).reduce(function(t,x){ return t + (x.status==="Lapsed" || x.status==="Cancelled" ? 0 : (+x.prem||0)); }, 0); }
   function editClient(c){
-    var isNew = !c; c = c ? JSON.parse(JSON.stringify(c)) : {id:uid(), first:"", last:"", email:"", phone:"", state:"", agent_id:null, review:"", notes:"", policies:[]};
+    var isNew = !c; c = c ? JSON.parse(JSON.stringify(c)) : {id:C.uid(), first:"", last:"", email:"", phone:"", state:"", agent_id:null, review:"", notes:"", policies:[]};
     function inp(k, ph, type){ var i = h("input",{class:"field",type:type||"text",value:c[k]||"",placeholder:ph||""}); i.addEventListener("input", function(){ c[k] = i.value; }); return i; }
     var ag = h("select",{class:"field"}, h("option",{value:""},"Frank / ClearPoint (house)"));
     S.list.filter(isRecruit).sort(function(a,b){ return C.displayName(a).localeCompare(C.displayName(b)); }).forEach(function(p){ ag.appendChild(h("option",{value:p.id}, C.displayName(p))); });
