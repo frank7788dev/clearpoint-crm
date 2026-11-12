@@ -2648,7 +2648,7 @@ var OBJECTIONS = [
       h("div",{class:"who2"}, avatar(p,52), h("div",{style:"min-width:0;flex:1"}, h("h2",null,C.displayName(p)), h("div",{class:"note"}, [p.company, p.city && p.state ? p.city+", "+p.state : p.state, d.yrs!=null ? Math.floor(d.yrs)+" yrs licensed" : "", (STATUS[p.status]||{}).label].filter(Boolean).join("  ·  "))),
         h("button",{type:"button",class:"btn sm",onclick:function(){ openDrawer(p.id); }},"Open profile")),
       h("div",{class:"bd"},
-        h("a",{class:"callnum",href:"tel:"+String(num).replace(/[^\d+]/g,"")}, icon("phone"), num),
+        h("a",{class:"callnum",href:"tel:"+String(num).replace(/[^\d+]/g,"")}, icon("phone"), (function(n){ var d = String(n).replace(/\D/g,""); if (d.length===11 && d[0]==="1") d = d.slice(1); return d.length===10 ? "("+d.slice(0,3)+") "+d.slice(3,6)+"-"+d.slice(6) : n; })(num)),
         lt.what ? h("div",{class:"note"}, "Last touch: "+lt.what+" · "+(ago(lt.at)||"")+(lt.body ? " · “"+lt.body+"”" : "")) : null,
         h("b",{style:"font-size:13px;margin-top:6px"},"How did it go?"), outs,
         h("button",{type:"button",class:"btn ghost sm",style:"align-self:flex-start",onclick:function(){ Q.skip[p.id] = 1; renderView(true); }},"Skip for now")));
