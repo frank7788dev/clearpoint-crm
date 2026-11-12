@@ -442,6 +442,19 @@ tbody tr.open{box-shadow:inset 2px 0 0 var(--gold)}
 [data-theme="day"] .seg button[aria-pressed="true"]{background:#0b0b0c;color:#fff;box-shadow:none}
 [data-theme="day"] .pill[aria-pressed="true"],[data-theme="day"] .schip[aria-pressed="true"]{background:#0b0b0c;border-color:#0b0b0c;color:#fff}
 [data-theme="day"] .schip[aria-pressed="true"] span,[data-theme="day"] .pill[aria-pressed="true"] .n{color:var(--gold-2)}
+
+.callnum{display:inline-flex;align-items:center;gap:10px;font-size:26px;font-weight:600;color:var(--ink);text-decoration:none;font-variant-numeric:tabular-nums;align-self:flex-start;padding:6px 14px 6px 10px;border:1px solid var(--line-2);border-radius:var(--r)}
+.callnum:hover{border-color:var(--gold)} .callnum svg{width:20px;height:20px;color:var(--accent)}
+.outs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.script{white-space:pre-wrap;font-size:14.5px;line-height:1.65;max-width:68ch}
+.lirow{display:grid;grid-template-columns:36px 1fr auto auto auto 26px;gap:10px;align-items:center;padding:9px 4px;border-bottom:1px solid var(--line)} .lirow:last-child{border-bottom:0}
+.lirow .t{font-weight:600} .lirow .d{font-size:12.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tilemap{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:5px;max-width:760px}
+.tile{all:unset;box-sizing:border-box;cursor:pointer;aspect-ratio:1.25;border-radius:6px;background:var(--surface-2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:var(--ink-3)}
+.tile b{font-size:12px;font-weight:600} .tile small{font-size:10.5px;font-variant-numeric:tabular-nums}
+.tile.has{color:#17140d} .tile:hover{outline:2px solid var(--gold);outline-offset:1px}
+.fin{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px} .fin .field{width:100%}
+@media (max-width:900px){ .outs{grid-template-columns:1fr 1fr} .fin{grid-template-columns:1fr 1fr} .lirow{grid-template-columns:36px 1fr auto 26px} .lirow .btn:not(.primary){display:none} }
 @media (max-width:1100px){
   .kpis{grid-template-columns:repeat(3,minmax(0,1fr))} .kpi:nth-child(3){border-right:0} .kpi:nth-child(-n+3){border-bottom:1px solid var(--line)}
   .grid2,.inbox,.finder,.outreach,.bigacts,.worktabs{grid-template-columns:1fr} .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -467,6 +480,7 @@ tbody tr.open{box-shadow:inset 2px 0 0 var(--gold)}
     <button class="nav" data-view="dashboard" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>Home</button>
     <button class="nav" data-view="outreach" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>Work<span class="badge" id="inboxBadge"></span></button>
     <button class="nav" data-view="inbox" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13l3-8h12l3 8"/><path d="M3 13v6h18v-6h-5l-1.5 2.5h-5L8 13z"/></svg>Inbox<span class="badge" id="inboxBadge2"></span></button>
+    <button class="nav" data-view="calls" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>Calls</button>
     <button class="nav" data-view="prospects" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M17 11a3 3 0 1 0 0-6M22 21c0-3-2-5-5-5.5"/></svg>Leads</button>
     <button class="nav" data-view="pipeline" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="11" rx="1.5"/><rect x="17" y="4" width="4" height="7" rx="1.5"/></svg>Pipeline</button>
     <div class="navlabel">Agency</div>
@@ -1029,13 +1043,13 @@ var OBJECTIONS = [
     COLS.forEach(function(k){ p[k] = r[k]==null ? "" : r[k]; });
     if (r.extra && r.extra.ap) p.ap = r.extra.ap;
     if (r.extra && r.extra.onb) p.onb = r.extra.onb;
-    if (r.extra){ ["upline","licExp","ceDue","prod"].forEach(function(k){ if (r.extra[k]!=null) p[k] = r.extra[k]; }); }
+    if (r.extra){ ["upline","licExp","ceDue","prod","imo","lost","li","called"].forEach(function(k){ if (r.extra[k]!=null) p[k] = r.extra[k]; }); }
     return norm(p);
   }
   function recExtra(p){
     var x = {};
     if (p.ap) x.ap = p.ap; if (p.onb) x.onb = p.onb;
-    ["upline","licExp","ceDue"].forEach(function(k){ if (p[k]) x[k] = p[k]; });
+    ["upline","licExp","ceDue","imo","lost","li","called"].forEach(function(k){ if (p[k]) x[k] = p[k]; });
     if (p.prod && p.prod.length) x.prod = p.prod;
     return Object.keys(x).length ? x : null;
   }
@@ -1470,7 +1484,7 @@ var OBJECTIONS = [
   function refreshBadges(){ var n = 0; S.list.forEach(function(p){ if (p.waiting || (p.fu && p.fu<=TODAY && p.status!=="dnc")) n++; }); $("#inboxBadge").textContent = n ? (n>99?"99+":String(n)) : ""; var w = 0; S.list.forEach(function(p){ if (p.waiting) w++; }); var b2 = $("#inboxBadge2"); if (b2) b2.textContent = w ? (w>99?"99+":String(w)) : ""; }
 
   /* ================= router ================= */
-  var TITLES = {dashboard:"Home", team:"Team", outreach:"Work", prospects:"Leads", pipeline:"Pipeline", inbox:"Inbox", recruits:"Recruits", clients:"Clients", reports:"Reports", apollo:"Apollo finder", scripts:"Scripts", settings:"Settings & import"};
+  var TITLES = {dashboard:"Home", team:"Team", outreach:"Work", prospects:"Leads", pipeline:"Pipeline", inbox:"Inbox", recruits:"Recruits", clients:"Clients", reports:"Reports", calls:"Calls & LinkedIn", apollo:"Apollo finder", scripts:"Scripts", settings:"Settings & import"};
   function route(){
     var v = (location.hash||"").replace("#","");
     if (!TITLES[v]) v = "dashboard";
@@ -1486,7 +1500,7 @@ var OBJECTIONS = [
   function render(){ $("#exBanner").hidden = !S.examples; refreshBadges(); renderView(false); }
   function renderView(soft){
     var box = $("#view");
-    var fn = {dashboard:vDashboard, team:vTeam, outreach:vOutreach, prospects:vProspects, pipeline:vPipeline, inbox:vInboxNew, recruits:vRecruits, clients:vClients, reports:vReports, apollo:vApollo, scripts:vScripts, settings:vSettings}[S.view];
+    var fn = {dashboard:vDashboard, team:vTeam, outreach:vOutreach, prospects:vProspects, pipeline:vPipeline, inbox:vInboxNew, recruits:vRecruits, clients:vClients, reports:vReports, calls:vCalls, apollo:vApollo, scripts:vScripts, settings:vSettings}[S.view];
     var y = $("#main").scrollTop;
     if (soft) S.softUntil = performance.now()+400;   /* refreshes show numbers at once; only a fresh page counts up */
     var el = fn(soft);
@@ -1530,7 +1544,7 @@ var OBJECTIONS = [
   function kClose(){ if (K.el) K.el.classList.remove("on"); }
   function kRender(){
     var q = K.inp.value.trim().toLowerCase(), out = [];
-    var pages = [["dashboard","Home"],["outreach","Work: replies, follow-ups, new leads"],["prospects","Leads"],["pipeline","Pipeline"],["scripts","Scripts"],["settings","Settings & import"]];
+    var pages = [["dashboard","Home"],["outreach","Work: replies, follow-ups, new leads"],["calls","Calls & LinkedIn"],["prospects","Leads"],["pipeline","Pipeline"],["scripts","Scripts"],["settings","Settings & import"]];
     if (isLead()) pages.splice(4,0,["recruits","Recruits"],["clients","Clients"],["reports","Reports"],["team","Team & goals"]);
     pages.forEach(function(pg){ if (!q || pg[1].toLowerCase().indexOf(q)>-1) out.push({a:pg[1], b:"Go to page", go:function(){ location.hash = pg[0]; }}); });
     (S.views||[]).forEach(function(v){ if (!q || v.name.toLowerCase().indexOf(q)>-1) out.push({a:v.name, b:"Saved list", go:function(){ S.f = Object.assign({q:"",track:"",status:"",state:"",contact:"",flag:"",owner:""}, v.f); location.hash = "prospects"; renderView(true); }}); });
@@ -2479,6 +2493,9 @@ var OBJECTIONS = [
     });
     wrap.appendChild(h("div",{class:"card"}, h("div",{class:"hd"}, h("h2",null,"Emails sent per day"), h("span",{class:"note"},"Number above a bar is replies received that day")), h("div",{class:"bd"}, days.length ? chart : h("div",{class:"empty"},"No emails sent yet."))));
 
+    wrap.appendChild(forecastCard(c));
+    wrap.appendChild(mapCard(c));
+
     /* conversion */
     var conv = h("tbody"), base = Math.max(1, c.contacted);
     [["Contacted", c.contacted],["Replied", c.replied],["Call booked or beyond", c.st.booked+c.st.contracting+c.st.joined],["Contracting or joined", c.st.contracting+c.st.joined],["Joined", c.st.joined]].forEach(function(x){
@@ -2500,6 +2517,8 @@ var OBJECTIONS = [
     var tb = h("tbody");
     st.forEach(function(x){ tb.appendChild(h("tr",{onclick:function(){ resetF(); S.f.state = x[0]==="—" ? "" : x[0]; location.hash = "prospects"; }}, h("td",null, C.STATES[x[0]]||x[0]), h("td",{class:"num"}, nf(x[1].n)), h("td",{class:"num"}, nf(x[1].out)), h("td",{class:"num"}, nf(x[1].rep)), h("td",{class:"num"}, pct(x[1].rep,x[1].out)+"%"), h("td",null, S.territories[x[0]] ? memberName(S.territories[x[0]]) : "Open"))); });
     wrap.appendChild(h("div",{class:"card"}, h("div",{class:"hd"}, h("h2",null,"By state")), st.length ? h("div",{class:"tablewrap"}, h("table",null, h("thead",null, h("tr",null, h("th",null,"State"), h("th",null,"Agents"), h("th",null,"Contacted"), h("th",null,"Replied"), h("th",null,"Reply rate"), h("th",null,"Territory"))), tb)) : h("div",{class:"empty"},"Reply rates by state appear once agents have been contacted.")));
+
+    wrap.appendChild(h("div",{class:"grid2"}, reasonsCard(list), imoCard(list)));
 
     /* production by carrier */
     var car = {}; S.list.forEach(function(p){ (p.prod||[]).forEach(function(x){ var k = x.carrier || "Not specified"; car[k] = car[k] || {n:0,p:0}; car[k].n++; car[k].p += +x.prem||0; }); });
@@ -2575,6 +2594,149 @@ var OBJECTIONS = [
     });
     wrap.appendChild(h("div",{class:"card"}, h("div",{class:"tablewrap"}, h("table",null, h("thead",null, h("tr",null, h("th",null,"Client"), h("th",null,"State"), h("th",null,"Policies"), h("th",null,"Annual premium"), h("th",null,"Writing agent"), h("th",null,"Next review"))), tb)), list.length>300 ? h("div",{class:"note",style:"padding:12px 18px"},"Showing the first 300. Search to narrow the list.") : null));
     return wrap;
+  }
+
+  /* ================= CALLS & LINKEDIN (work the phone and LinkedIn, one agent at a time) ================= */
+  var REASONS = ["Happy where they are","Captive or locked contract","Bad timing","Not growing right now","Didn't trust the offer","Leaving the business","No reason given"];
+  var Q = {tab:"calls", skip:{}, state:""};
+  function callList(){
+    return scoped().filter(function(p){
+      if (p.ex || !(p.phone||p.mobile) || p.status==="dnc" || p.status==="joined" || p.called===TODAY || Q.skip[p.id]) return false;
+      if (Q.state && p.state!==Q.state) return false;
+      return p.waiting || (p.fu && p.fu<=TODAY) || p.status==="contacted" || p.status==="replied" || p.status==="booked";
+    }).sort(function(a,b){ return (b.waiting?4:0)+(b.status==="replied"?2:0)+(b.fu&&b.fu<=TODAY?1:0) - ((a.waiting?4:0)+(a.status==="replied"?2:0)+(a.fu&&a.fu<=TODAY?1:0)) || D(b).score-D(a).score; });
+  }
+  function liList(){
+    return scoped().filter(function(p){ return !p.ex && !p.li && p.status!=="dnc" && p.status!=="joined" && !Q.skip[p.id] && (!Q.state || p.state===Q.state) && (p.status!=="new" || D(p).score>=60); })
+      .sort(function(a,b){ return (b.linkedin?1:0)-(a.linkedin?1:0) || (b.status!=="new"?1:0)-(a.status!=="new"?1:0) || D(b).score-D(a).score; });
+  }
+  function liMessage(p){ var t = (S.scripts && S.scripts.li) || "Hi {first}, I work with licensed life agents in {stateName} and thought it made sense to connect. I'm direct to the IMO, so my agents keep more of every commission. Open to comparing contracts sometime?"; return fill(t, tokens(p)).replace(/\{stateName\}/g, C.STATES[p.state]||"your state"); }
+  function askReason(p, title, done){
+    var sel = h("select",{class:"field",style:"width:100%"}); REASONS.forEach(function(r){ sel.appendChild(h("option",null,r)); });
+    ask(title, [h("div",{class:"note",style:"margin-bottom:8px"},"Pick the closest reason. It feeds the “Why they said no” report."), sel], "Save", function(){ p.lost = sel.value; done(); });
+  }
+  function vCalls(){
+    var wrap = h("section",{class:"view"});
+    var seg = h("div",{class:"seg",role:"group"});
+    [["calls","Phone calls"],["li","LinkedIn"]].forEach(function(t){ seg.appendChild(h("button",{type:"button","aria-pressed":Q.tab===t[0]?"true":"false",onclick:function(){ Q.tab = t[0]; renderView(true); }}, t[1])); });
+    var states = {}; S.list.forEach(function(p){ if (p.state) states[p.state] = 1; });
+    var stSel = h("select",{class:"field","aria-label":"State"}, h("option",{value:""},"All states")); Object.keys(states).sort().forEach(function(k){ stSel.appendChild(h("option",{value:k}, C.STATES[k]||k)); });
+    stSel.value = Q.state; stSel.addEventListener("change", function(){ Q.state = stSel.value; renderView(true); });
+    wrap.appendChild(h("div",{class:"toolbar"}, seg, stSel));
+    if (Q.tab==="li"){ wrap.appendChild(liCard()); return wrap; }
+    var list = callList(), p = list[0];
+    var doneToday = S.list.filter(function(x){ return x.called===TODAY; }).length;
+    var tiles = h("div",{class:"pipesum",style:"grid-template-columns:repeat(3,minmax(0,1fr))"});
+    [["In your call queue", nf(list.length)],["Calls logged today", nf(doneToday)],["Replies waiting", nf(list.filter(function(x){ return x.waiting; }).length)]].forEach(function(t){ tiles.appendChild(h("div",{class:"ps"}, h("span",null,t[0]), h("b",{class:"num"},t[1]))); });
+    wrap.appendChild(tiles);
+    if (!p){ wrap.appendChild(h("div",{class:"card"}, h("div",{class:"empty"},"No one left to call right now. Agents you've emailed, agents who replied and follow-ups due show up here when they have a phone number."))); return wrap; }
+    var d = D(p), num = p.mobile || p.phone, tpl = getTpls(d.track).filter(function(t){ return t.ch==="Call"; });
+    var script = tpl.length ? fill(tpl[0].body, tokens(p)) : "", vm = tpl.length>1 ? fill(tpl[1].body, tokens(p)) : "";
+    function finish(what, fn){ addAct(p, {ch:"call", dir:"out", what:what, t:new Date().toISOString()}); p.lastTouch = {at:new Date().toISOString(), ch:"call", dir:"out", what:what, body:""}; p.waiting = false; if (p.status==="new") p.status = "contacted"; p.called = TODAY; if (fn) fn(); toast("Logged: "+what); changed(p); }
+    var outs = h("div",{class:"outs"});
+    [["No answer", function(){ finish("Call: no answer", function(){ p.fu = isoDaysAhead(2); }); }],
+     ["Left voicemail", function(){ finish("Call: left voicemail", function(){ p.fu = isoDaysAhead(3); }); }],
+     ["Talked, interested", function(){ finish("Call: talked, interested", function(){ p.status = (p.status==="booked"||p.status==="contracting") ? p.status : "replied"; p.fu = isoDaysAhead(1); }); copy(BOOKING_URL); toast("Booking link copied. Text or email it to "+(p.first||"them")+"."); }],
+     ["Booked a call", function(){ finish("Call: booked a follow-up call", function(){ if (["contracting","joined"].indexOf(p.status)<0) p.status = "booked"; }); }],
+     ["Not now", function(){ askReason(p, "Why not now?", function(){ finish("Call: not now ("+p.lost+")", function(){ p.status = "notnow"; p.fu = isoDaysAhead(90); }); }); }],
+     ["Not interested", function(){ askReason(p, "Why not interested?", function(){ finish("Call: not interested ("+p.lost+")", function(){ p.status = "notnow"; p.fu = ""; }); }); }],
+     ["Wrong number", function(){ finish("Call: wrong number", function(){ p.notes = ((p.notes||"")+"\nWrong number: "+num).trim(); if (p.mobile===num) p.mobile = ""; else p.phone = ""; }); }],
+     ["Do not call", function(){ finish("Call: asked not to be contacted", function(){ p.status = "dnc"; p.fu = ""; }); }]
+    ].forEach(function(o, i){ outs.appendChild(h("button",{type:"button",class:"btn"+(i===2||i===3?" primary":""),onclick:o[1]}, o[0])); });
+    var lt = p.lastTouch || {};
+    var left = h("div",{class:"card composer"},
+      h("div",{class:"who2"}, avatar(p,52), h("div",{style:"min-width:0;flex:1"}, h("h2",null,C.displayName(p)), h("div",{class:"note"}, [p.company, p.city && p.state ? p.city+", "+p.state : p.state, d.yrs!=null ? Math.floor(d.yrs)+" yrs licensed" : "", (STATUS[p.status]||{}).label].filter(Boolean).join("  ·  "))),
+        h("button",{type:"button",class:"btn sm",onclick:function(){ openDrawer(p.id); }},"Open profile")),
+      h("div",{class:"bd"},
+        h("a",{class:"callnum",href:"tel:"+String(num).replace(/[^\d+]/g,"")}, icon("phone"), num),
+        lt.what ? h("div",{class:"note"}, "Last touch: "+lt.what+" · "+(ago(lt.at)||"")+(lt.body ? " · “"+lt.body+"”" : "")) : null,
+        h("b",{style:"font-size:13px;margin-top:6px"},"How did it go?"), outs,
+        h("button",{type:"button",class:"btn ghost sm",style:"align-self:flex-start",onclick:function(){ Q.skip[p.id] = 1; renderView(true); }},"Skip for now")));
+    var right = h("div",{class:"card"}, h("div",{class:"hd"}, h("h2",null,"Your script"), h("a",{href:"#scripts",class:"note"},"Edit scripts")),
+      h("div",{class:"bd"}, h("div",{class:"script"}, script || "Add a call script on the Scripts page."), vm ? h("details",{class:"morefilters",style:"margin-top:12px"}, h("summary",null,"Voicemail script"), h("div",{class:"script",style:"margin-top:8px"}, vm)) : null));
+    wrap.appendChild(h("div",{class:"grid2"}, left, right));
+    var next = h("div",{class:"feed"});
+    list.slice(1,7).forEach(function(x){ next.appendChild(h("button",{type:"button",class:"fitem",onclick:function(){ openDrawer(x.id); }}, avatar(x), h("div",{style:"min-width:0"}, h("div",{class:"t"}, C.displayName(x)), h("div",{class:"d"}, [x.mobile||x.phone, x.state, (STATUS[x.status]||{}).label].filter(Boolean).join("  ·  "))), x.waiting ? h("span",{class:"chip hot"},"Replied") : h("span",{class:"note"}, String(D(x).score)))); });
+    if (list.length>1) wrap.appendChild(h("div",{class:"card"}, h("div",{class:"hd"}, h("h2",null,"Up next")), h("div",{class:"bd"}, next)));
+    return wrap;
+  }
+  function liCard(){
+    var GOAL = 20, done = S.list.filter(function(p){ return p.li===TODAY; }).length, list = liList().slice(0, Math.max(0, GOAL-done));
+    var bar = h("i"); later(function(){ bar.style.width = Math.min(100, done/GOAL*100)+"%"; });
+    var box = h("div",{class:"feed"});
+    if (!list.length) box.appendChild(h("div",{class:"empty"}, done>=GOAL ? "That's your 20 for today. LinkedIn limits how many new people you can message, so more than this risks your account." : "No agents left for LinkedIn in this view."));
+    list.forEach(function(p){
+      var url = /^https?:/i.test(p.linkedin||"") ? p.linkedin : "https://www.linkedin.com/search/results/people/?keywords="+encodeURIComponent((C.displayName(p)+" "+(p.city||"")+" insurance").trim());
+      box.appendChild(h("div",{class:"lirow"}, avatar(p), h("div",{style:"min-width:0"}, h("div",{class:"t"}, C.displayName(p)), h("div",{class:"d"}, [p.company, p.city && p.state ? p.city+", "+p.state : p.state, (STATUS[p.status]||{}).label].filter(Boolean).join("  ·  "))),
+        h("a",{class:"btn sm",href:url,target:"_blank",rel:"noopener"}, p.linkedin ? "Open profile" : "Find on LinkedIn"),
+        h("button",{type:"button",class:"btn sm",onclick:function(){ copy(liMessage(p)); }},"Copy message"),
+        h("button",{type:"button",class:"btn sm primary",onclick:function(){ p.li = TODAY; addAct(p, {ch:"note", dir:"note", what:"LinkedIn message sent", t:new Date().toISOString()}); changed(p); }},"Mark sent"),
+        h("button",{type:"button",class:"plain x","aria-label":"Skip "+C.displayName(p),onclick:function(){ Q.skip[p.id] = 1; renderView(true); }},"×")));
+    });
+    var ta = h("textarea",{class:"field",rows:"3","aria-label":"LinkedIn message"}); ta.value = (S.scripts && S.scripts.li) || "Hi {first}, I work with licensed life agents in {stateName} and thought it made sense to connect. I'm direct to the IMO, so my agents keep more of every commission. Open to comparing contracts sometime?";
+    ta.addEventListener("change", function(){ if (!isOwner()){ toast("Only the owner can change the shared message."); return; } ensureEditable(); S.scripts.li = ta.value; saveScripts(); toast("Message saved"); });
+    return h("div",{class:"card"}, h("div",{class:"hd"}, h("h2",null,"Today's LinkedIn list"), h("span",{class:"note"}, done+" of "+GOAL+" sent today")),
+      h("div",{class:"bd",style:"display:flex;flex-direction:column;gap:12px"}, h("div",{class:"progress",style:"margin:0"}, bar),
+        h("label",{class:"lbl"},"Your message ({first} and {stateName} fill in for each agent)", ta), box,
+        h("div",{class:"note"},"You send each message yourself in LinkedIn. LinkedIn doesn't allow automated messages, and accounts that try it get restricted.")));
+  }
+
+  /* ================= report extras: map, forecast, why-no, current IMO ================= */
+  var TILES = ["AK . . . . . . . . . . ME",". . . . . . WI . . . VT NH","WA ID MT ND MN IL MI . NY MA . .","OR NV WY SD IA IN OH PA NJ CT RI .","CA UT CO NE MO KY WV VA MD DE . .",". AZ NM KS AR TN NC SC DC . . .",". . . OK LA MS AL GA . . . .","HI . . TX . . . . FL . . ."];
+  S.mapK = "n";
+  function mapCard(c){
+    var keys = {n:"Agents in list", out:"Contacted", rep:"Replied", rec:"Recruits"}, rec = {};
+    S.list.forEach(function(p){ if (isRecruit(p) && p.state) rec[p.state] = (rec[p.state]||0)+1; });
+    function val(st){ var b = c.byState[st]; if (S.mapK==="rec") return rec[st]||0; return b ? b[S.mapK] : 0; }
+    var mx = 1; Object.keys(C.STATES).forEach(function(k){ mx = Math.max(mx, val(k)); });
+    var grid = h("div",{class:"tilemap",role:"img","aria-label":"Map of the United States by state: "+keys[S.mapK]});
+    TILES.forEach(function(row){ row.split(" ").forEach(function(st){
+      if (st==="."){ grid.appendChild(h("span")); return; }
+      var v = val(st), a = v ? 0.14 + 0.86*Math.sqrt(v/mx) : 0;
+      grid.appendChild(h("button",{type:"button",class:"tile"+(v?" has":""),style:v?"background:color-mix(in srgb,var(--gold) "+Math.round(a*100)+"%,var(--surface-2))":"",title:(C.STATES[st]||st)+": "+nf(v)+" "+keys[S.mapK].toLowerCase(),onclick:function(){ resetF(); S.f.state = st; location.hash = "prospects"; }}, h("b",null,st), h("small",null, v ? (v>=1000 ? (Math.round(v/100)/10)+"k" : String(v)) : "")));
+    }); });
+    var seg = h("div",{class:"seg"}); Object.keys(keys).forEach(function(k){ seg.appendChild(h("button",{type:"button","aria-pressed":S.mapK===k?"true":"false",onclick:function(){ S.mapK = k; renderView(true); }}, keys[k])); });
+    return h("div",{class:"card"}, h("div",{class:"hd"}, h("h2",null,"Agent map"), seg), h("div",{class:"bd"}, grid, h("div",{class:"note",style:"margin-top:10px"},"Darker gold means more. Click a state to open its agents.")));
+  }
+  function forecastCard(c){
+    var F = {}; try { F = JSON.parse(localStorage.getItem("cpg-forecast")||"{}"); } catch(e){}
+    var wd = (S.rep.days||[]).filter(function(d){ var g = new Date(d.day+"T12:00:00").getDay(); return g>0 && g<6 && +d.sent>0; }).slice(-10);
+    var avg = wd.length ? Math.round(wd.reduce(function(t,d){ return t + (+d.sent); }, 0)/wd.length) : 0;
+    var enough = c.contacted>=500 && c.replied>=10, booked = c.st.booked+c.st.contracting+c.st.joined;
+    var def = {perDay:avg||60, reply:enough ? pct(c.replied,c.contacted) : 1.5, call:(c.replied>=10 && booked>=3) ? pct(booked,c.replied) : 40, join:(booked>=10 && c.st.joined>=2) ? pct(c.st.joined,booked) : 25, prem:3000};
+    var v = Object.assign({}, def, F), out = h("div",{class:"pipesum"});
+    function draw(){
+      out.textContent = "";
+      var emails = v.perDay*64, rep = emails*v.reply/100, calls = rep*v.call/100, rec = calls*v.join/100;
+      [["Emails sent", nf(Math.round(emails))],["Replies", nf(Math.round(rep))],["Calls booked", nf(Math.round(calls))],["Recruits joined", (Math.round(rec*10)/10).toLocaleString("en-US")],["Monthly premium added", money(rec*v.prem)]].forEach(function(t){ out.appendChild(h("div",{class:"ps"}, h("span",null,t[0]), h("b",{class:"num"},t[1]))); });
+      out.style.gridTemplateColumns = "repeat(5,minmax(0,1fr))";
+    }
+    function inp(k, label, step){ var i = h("input",{class:"field",type:"number",min:"0",step:step||"1",value:String(v[k])}); i.addEventListener("input", function(){ v[k] = Math.max(0, parseFloat(i.value)||0); F[k] = v[k]; try { localStorage.setItem("cpg-forecast", JSON.stringify(F)); } catch(e){} draw(); }); return h("label",{class:"lbl"}, label, i); }
+    draw();
+    return h("div",{class:"card"}, h("div",{class:"hd"}, h("h2",null,"Next 90 days"), h("span",{class:"note"},"64 sending days")),
+      h("div",{class:"bd",style:"display:flex;flex-direction:column;gap:14px"}, out,
+        h("div",{class:"fin"}, inp("perDay","Emails per weekday"), inp("reply","Reply rate %","0.1"), inp("call","Replies that book a call %"), inp("join","Calls that join %"), inp("prem","Monthly premium per recruit $","100")),
+        h("div",{class:"note"}, (avg ? "Emails per weekday starts from your recent average ("+nf(avg)+"). " : "")+(enough ? "Reply rate is your real rate so far. " : "You don't have enough replies yet for a reliable rate, so the reply rate and the two rates after it are starting assumptions. ")+"Change any number to see the effect. This is an estimate, not a promise.")));
+  }
+  function reasonsCard(list){
+    var by = {}, n = 0; list.forEach(function(p){ if (p.lost){ by[p.lost] = (by[p.lost]||0)+1; n++; } });
+    var ks = Object.keys(by).sort(function(a,b){ return by[b]-by[a]; }), box = h("div",{class:"funnel"});
+    ks.forEach(function(k){ var bar = h("i",{style:"--c:var(--gold)"}); box.appendChild(h("div",{class:"frow",style:"grid-template-columns:200px 1fr 70px"}, h("span",null,k), h("div",{class:"ftrack"},bar), h("span",{class:"num"}, nf(by[k])+" · "+pct(by[k],n)+"%"))); later(function(){ bar.style.width = (by[k]/by[ks[0]]*100)+"%"; }); });
+    return h("div",{class:"card"}, h("div",{class:"hd"}, h("h2",null,"Why they said no")), h("div",{class:"bd"}, ks.length ? box : h("div",{class:"empty"},"When you mark an agent Not now or Not interested, pick a reason on their profile or in the call queue. The totals appear here.")));
+  }
+  function imoCard(list){
+    var by = {}; list.forEach(function(p){ if (!p.imo) return; var k = p.imo.trim(); if (!k) return; var b = by[k.toLowerCase()] || (by[k.toLowerCase()] = {name:k, n:0, rep:0, won:0}); b.n++; if (p.waiting || ["replied","booked","contracting","joined"].indexOf(p.status)>-1) b.rep++; if (isRecruit(p)) b.won++; });
+    var ks = Object.keys(by).sort(function(a,b){ return by[b].won-by[a].won || by[b].n-by[a].n; }), tb = h("tbody");
+    ks.slice(0,15).forEach(function(k){ var b = by[k]; tb.appendChild(h("tr",null, h("td",null,b.name), h("td",{class:"num"},nf(b.n)), h("td",{class:"num"},nf(b.rep)), h("td",{class:"num"},nf(b.won)))); });
+    return h("div",{class:"card"}, h("div",{class:"hd"}, h("h2",null,"Where agents are coming from")), ks.length ? h("div",{class:"tablewrap"}, h("table",{class:"plain"}, h("thead",null, h("tr",null, h("th",null,"Current IMO or agency"), h("th",null,"Agents"), h("th",null,"Replied"), h("th",null,"Won"))), tb)) : h("div",{class:"empty"},"Fill in “Current IMO” on an agent's profile when you learn it. This shows which competitors you win agents from."));
+  }
+  function intelCard(p){
+    var imo = h("input",{class:"field",id:"f_imo",value:p.imo||"",placeholder:"e.g. the IMO or agency they're with now",list:"imoList"});
+    imo.addEventListener("change", function(){ p.imo = imo.value.trim(); changed(p); });
+    var seen = {}, dl = h("datalist",{id:"imoList"}); S.list.forEach(function(x){ if (x.imo && !seen[x.imo]){ seen[x.imo] = 1; dl.appendChild(h("option",{value:x.imo})); } });
+    var why = h("select",{class:"field",id:"f_lost"}, h("option",{value:""},"Not set")); REASONS.forEach(function(r){ why.appendChild(h("option",null,r)); });
+    why.value = p.lost||""; why.addEventListener("change", function(){ p.lost = why.value; changed(p); });
+    return h("div",{class:"card"}, h("div",{class:"bd"}, h("div",{class:"cols2"}, h("label",{class:"lbl",for:"f_imo"},"Current IMO", imo, dl), h("label",{class:"lbl",for:"f_lost"},"Why they said no", why))));
   }
 
   /* ================= TEAM (owner & managers) ================= */
@@ -3118,6 +3280,7 @@ var OBJECTIONS = [
         [["Tomorrow",1],["In 3 days",3],["Next week",7]].map(function(x){ return h("button",{type:"button",class:"btn sm",onclick:function(){ p.fu = isoDaysAhead(x[1]); changed(p); toast("Follow-up set for "+fmtDate(p.fu)); }}, x[0]); }),
         p.waiting ? h("button",{type:"button",class:"btn sm",onclick:function(){ p.waiting = false; changed(p); }},"Mark reply handled") : null))));
 
+    body.appendChild(intelCard(p));
     if (p.status==="contracting" || p.status==="joined" || p.onb) body.appendChild(onboardingCard(p));
     if (isLead() && isRecruit(p)) body.appendChild(recruitCard(p));
     if (isLead()){

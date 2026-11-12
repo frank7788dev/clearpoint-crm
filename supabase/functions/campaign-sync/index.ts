@@ -57,6 +57,24 @@ async function portal(p: any) {
   return json({ error: "unknown" }, 400);
 }
 
+const UNSUB_URL = "https://frank7788dev.github.io/clearpoint-crm/unsub.html?a=";
+// One-click opt-out. The link carries the agent's private id. Opening the page only looks the agent up;
+// nothing changes until they press the button, so email scanners that open links can't opt people out.
+// deno-lint-ignore no-explicit-any
+async function unsub(p: any) {
+  const sb = admin(), id = String(p.a || "");
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ error: "This link isn't valid." }, 404);
+  const { data: ag } = await sb.from("agents").select("id,first,status,email").eq("id", id).maybeSingle();
+  if (!ag) return json({ error: "This link isn't valid." }, 404);
+  if (p.confirm && ag.status !== "dnc") {
+    const at = new Date().toISOString();
+    await sb.from("agents").update({ status: "dnc", waiting: false, fu: "", last_touch: { at, ch: "email", dir: "in", what: "Opted out with the unsubscribe link", body: "" } }).eq("id", ag.id);
+    await sb.from("activities").insert({ agent_id: ag.id, user_id: null, ch: "email", dir: "note", what: "Opted out with the unsubscribe link", body: "", at });
+    await sb.from("outbox").update({ status: "error", error: "Opted out" }).eq("status", "queued").eq("agent_id", ag.id);
+  }
+  return json({ first: ag.first || "", done: !!p.confirm || ag.status === "dnc" });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return new Response("ok", { headers: CORS });
@@ -64,6 +82,7 @@ Deno.serve(async (req) => {
   let p: any;
   try { p = await req.json(); } catch { return json({ error: "bad json" }, 400); }
   if (String(p.event || "").startsWith("portal_")) return portal(p);
+  if (p.event === "unsub") return unsub(p);
   const idToken = String(req.headers.get("x-google-id-token") || p.id_token || "");
   if (!idToken) return json({ error: "forbidden", why: "no Google token" }, 403);
   let info: Record<string, unknown> | null = null, why = "";
@@ -143,6 +162,8 @@ Deno.serve(async (req) => {
       if (dup.length) await sb.from("outbox").update({ status: "error", error: "Duplicate removed" }).in("id", dup);
     }
     if (items.length) await sb.from("outbox").update({ status: "sending" }).in("id", items.map((x) => x.id));
+    // every new conversation carries an opt-out link (replies inside an existing thread don't repeat it)
+    items = items.map((x) => (x.agent_id && !x.reply_thread) ? { ...x, body: String(x.body || "").trimEnd() + "\n\nIf you'd rather not hear from me, opt out here: " + UNSUB_URL + x.agent_id } : x);
     return json({ items });
   }
 
@@ -206,6 +227,18 @@ Deno.serve(async (req) => {
     }
     await sb.from("outbox").update({ status: "error", error: "Address bounced" }).eq("status", "queued").eq("to_email", email);
     return json({ matched: (ags || []).length });
+  }
+
+  // for the Sheet campaign: the private opt-out link for each address, and who has opted out lately
+  if (event === "agent_ids") {
+    const emails = (Array.isArray(p.emails) ? p.emails : []).map((e: string) => String(e).trim().toLowerCase()).filter(Boolean).slice(0, 200);
+    const links: Record<string, string> = {};
+    if (emails.length) { const { data } = await sb.from("agents").select("id,email").in("email", emails); (data || []).forEach((a) => { links[String(a.email).toLowerCase()] = UNSUB_URL + a.id; }); }
+    return json({ links });
+  }
+  if (event === "optouts") {
+    const { data } = await sb.from("agents").select("email").eq("status", "dnc").neq("email", "").gte("updated_at", new Date(Date.now() - 21 * 864e5).toISOString()).limit(2000);
+    return json({ emails: (data || []).map((a) => String(a.email).toLowerCase()) });
   }
 
   if (event === "digest") {

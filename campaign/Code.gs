@@ -307,6 +307,19 @@ function sendOutbox() {
   crm({ event: 'outbox_done', results: results });
 }
 
+/* ---------------- opt-out link ---------------- */
+// The line added under every campaign email. Each agent gets their own private link from the CRM.
+function optOutLine(email) {
+  const r = crm({ event: 'agent_ids', emails: [email] });
+  const link = r && r.links && r.links[String(email).trim().toLowerCase()];
+  return link ? "\n\nIf you'd rather not hear from me, opt out here: " + link : '';
+}
+// Anyone who opted out (by link, by reply, or marked Do not contact in the CRM) stops getting follow-ups.
+function syncOptouts(idx) {
+  const r = crm({ event: 'optouts' });
+  ((r && r.emails) || []).forEach(function (e) { const ref = idx.byEmail[e]; if (ref && ref.sh && !/^Opted out/.test(ref.status)) mark(ref, 'Opted out'); });
+}
+
 /* ---------------- email health guard ---------------- */
 function countSend() {
   const props = PropertiesService.getScriptProperties(), k = 'os:' + Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
@@ -400,7 +413,7 @@ function backfill() {
 function run() {
   const now = new Date();
   const me0 = Session.getActiveUser().getEmail().toLowerCase();
-  try { const idx = rowIndex(); handleReplies(idx, me0); checkBookings(idx, me0); } catch (e) { console.log('replies: ' + e); }
+  try { const idx = rowIndex(); handleReplies(idx, me0); checkBookings(idx, me0); syncOptouts(idx); } catch (e) { console.log('replies: ' + e); }
   try { checkHealth(); } catch (e) { console.log('health: ' + e); }
   try { syncCalendar(me0); } catch (e) { console.log('calendar: ' + e); }
   try { pushStats(); } catch (e) { console.log('stats: ' + e); }
@@ -437,7 +450,7 @@ function run() {
             hasQueued = true;
             if (contacted[email.toLowerCase()]) { row[iSt] = 'Skipped (already emailed)'; changed.push(r); continue; }
             contacted[email.toLowerCase()] = 1;
-            row[iT] = TAG + sendTracked(email, fill(E1_SUBJ, first), fill(E1, first));
+            row[iT] = TAG + sendTracked(email, fill(E1_SUBJ, first), fill(E1, first) + optOutLine(email));
             row[iS] = 1; row[iSt] = 'In sequence';
             told.push({ email: email, what: 'Campaign email 1 sent', sub: fill(E1_SUBJ, first) });
           } else if (pass === 1 && step >= 1 && step < 3) {
@@ -446,10 +459,10 @@ function run() {
             const r2 = theyReplied(row[iT], me);
             if (r2) { if (r2 === 'Bounced') { row[iSt] = r2; changed.push(r); crm({ event: 'bounced', email: email }); } else if (row[iSt] === 'In sequence') { row[iSt] = 'Replied - needs you'; changed.push(r); toCrm(email, 'replied', 'Replied: needs your answer', '', '', String(row[iT]).slice(TAG.length).split(',')[0]); notifyMe('💬 ' + first + ' replied', first + ' (' + email + ') replied to your email. Open fadybashir@clearpointglobal.org to answer.'); } continue; }
             if (step === 1) {
-              row[iT] += ',' + sendTracked(email, 'Re: ' + fill(E1_SUBJ, first), fill(E2, first));
+              row[iT] += ',' + sendTracked(email, 'Re: ' + fill(E1_SUBJ, first), fill(E2, first) + optOutLine(email));
               row[iS] = 2; told.push({ email: email, what: 'Campaign email 2 sent', sub: 'Re: ' + fill(E1_SUBJ, first) });
             } else {
-              row[iT] += ',' + sendTracked(email, E3_SUBJ, fill(E3, first));
+              row[iT] += ',' + sendTracked(email, E3_SUBJ, fill(E3, first) + optOutLine(email));
               row[iS] = 3; row[iSt] = 'Finished'; told.push({ email: email, what: 'Campaign email 3 sent', sub: E3_SUBJ });
             }
           } else continue;
