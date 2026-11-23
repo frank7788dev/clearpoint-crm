@@ -550,6 +550,14 @@ tbody tr.open{box-shadow:inset 2px 0 0 var(--gold)}
   .btn{height:40px} .btn.sm{height:34px}
   .grow-row{grid-template-columns:1fr 1fr}
   .nosearch .search{display:none}
+  .kbhint{display:none}
+  table.leads th:nth-child(4),table.leads td:nth-child(4){display:none}
+  table.leads th:nth-child(6),table.leads td:nth-child(6){width:108px}
+  .tablewrap table:not(.leads):has(th:nth-child(5)){min-width:560px}
+  .pipesum > .ps:last-child:nth-child(odd){grid-column:1/-1;border-right:0}
+  .board{min-height:0} .col .cards{max-height:62dvh}
+  .composer{scroll-margin-top:calc(110px + env(safe-area-inset-top))}
+  .tpl input,.tpl textarea{width:100%;min-width:0}
   .toolbar > .field,.toolbar > select{flex:1 1 40%} .toolbar > label:not(.lbl){flex-basis:100%}
   table.leads td:nth-child(6){font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .schip,.pill{white-space:nowrap;flex:none}
@@ -1633,6 +1641,8 @@ var OBJECTIONS = [
   $$(".nav[data-view]").forEach(function(b){ b.addEventListener("click", function(){ var v = b.getAttribute("data-view"); if (location.hash.replace("#","")===v){ document.body.classList.remove("sheet-open"); var mb = $("#moreBtn"); if (mb) mb.setAttribute("aria-expanded","false"); } location.hash = v; }); });
   window.addEventListener("hashchange", route);
   function render(){ $("#exBanner").hidden = !S.examples; refreshBadges(); renderView(false); }
+  var PHONE = window.matchMedia ? window.matchMedia("(max-width:760px)") : {matches:false};
+  function toDetail(){ if (!PHONE.matches) return; later(function(){ var c = document.querySelector("#view .composer"); if (c) c.scrollIntoView({behavior:REDUCED?"auto":"smooth", block:"start"}); }); }
   function renderView(soft){
     var box = $("#view");
     var fn = {dashboard:vDashboard, team:vTeam, outreach:vOutreach, prospects:vProspects, pipeline:vPipeline, inbox:vInboxNew, recruits:vRecruits, clients:vClients, reports:vReports, calls:vCalls, apollo:vApollo, scripts:vScripts, settings:vSettings}[S.view];
@@ -2080,7 +2090,7 @@ var OBJECTIONS = [
     var ql = h("div",{class:"queue"});
     queue.slice(0,80).forEach(function(p, i){
       var d = D(p), lt = p.lastTouch || {};
-      ql.appendChild(h("button",{type:"button",class:"qitem","data-id":p.id,"aria-current":p.id===O.cur?"true":"false",style:"animation:rise .4s var(--ease) both;animation-delay:"+Math.min(i*20,400)+"ms",onclick:function(){ O.cur = p.id; O.forId = null; renderView(true); }},
+      ql.appendChild(h("button",{type:"button",class:"qitem","data-id":p.id,"aria-current":p.id===O.cur?"true":"false",style:"animation:rise .4s var(--ease) both;animation-delay:"+Math.min(i*20,400)+"ms",onclick:function(){ O.cur = p.id; O.forId = null; renderView(true); toDetail(); }},
         avatar(p,34), h("div",{style:"min-width:0"}, h("div",{class:"t"}, C.displayName(p)),
           h("div",{class:"d"}, p.waiting && lt.body ? "“"+lt.body+"”" : [p.state, d.yrs!=null ? (d.yrs<1 ? "new agent" : Math.floor(d.yrs)+" yrs") : "", O.ch==="Email" ? p.email : C.fmtPhone(p.mobile||p.phone)].filter(Boolean).join(" · "))),
         p.waiting ? h("span",{class:"chip hot"}, ago(lt.at) || "Reply") : p.fu && p.fu<=TODAY ? h("span",{class:"chip"},"Due") : null));
@@ -2412,7 +2422,7 @@ var OBJECTIONS = [
     var list = h("div",{class:"queue"});
     all.slice(0,150).forEach(function(p){
       var lt = p.lastTouch || {};
-      list.appendChild(h("button",{type:"button",class:"qitem","aria-current":p.id===IB.cur?"true":"false",onclick:function(){ IB.cur = p.id; IB.forId = null; renderView(true); }},
+      list.appendChild(h("button",{type:"button",class:"qitem","aria-current":p.id===IB.cur?"true":"false",onclick:function(){ IB.cur = p.id; IB.forId = null; renderView(true); toDetail(); }},
         avatar(p,34), h("div",{style:"min-width:0"}, h("div",{class:"t"}, C.displayName(p)), h("div",{class:"d"}, lt.body ? (lt.dir==="in"?"“":"You: ")+lt.body+(lt.dir==="in"?"”":"") : (lt.what||(STATUS[p.status]||{}).label||""))),
         h("div",{style:"display:flex;flex-direction:column;align-items:flex-end;gap:4px"}, h("span",{class:"note"}, ago(lt.at)||""), p.waiting ? h("span",{class:"chip hot"},"Reply") : h("span",{class:"chip"}, (STATUS[p.status]||{}).label||""))));
     });
@@ -2650,7 +2660,7 @@ var OBJECTIONS = [
     /* by state */
     var st = Object.keys(c.byState).map(function(k){ return [k, c.byState[k]]; }).filter(function(x){ return x[1].out>0; }).sort(function(a,b){ return b[1].out-a[1].out; }).slice(0,15);
     var tb = h("tbody");
-    st.forEach(function(x){ tb.appendChild(h("tr",{onclick:function(){ resetF(); S.f.state = x[0]==="—" ? "" : x[0]; location.hash = "prospects"; }}, h("td",null, C.STATES[x[0]]||x[0]), h("td",{class:"num"}, nf(x[1].n)), h("td",{class:"num"}, nf(x[1].out)), h("td",{class:"num"}, nf(x[1].rep)), h("td",{class:"num"}, pct(x[1].rep,x[1].out)+"%"), h("td",null, S.territories[x[0]] ? memberName(S.territories[x[0]]) : "Open"))); });
+    st.forEach(function(x){ tb.appendChild(h("tr",{onclick:function(){ resetF(); S.f.state = x[0]==="—" ? "" : x[0]; location.hash = "prospects"; }}, h("td",null, C.STATES[x[0]]||x[0]), h("td",{class:"num"}, nf(x[1].n)), h("td",{class:"num"}, nf(x[1].out)), h("td",{class:"num"}, nf(x[1].rep)), h("td",{class:"num"}, pct(x[1].rep,x[1].out)+"%"), h("td",null, (S.territories||{})[x[0]] ? memberName(S.territories[x[0]]) : "Open"))); });
     wrap.appendChild(h("div",{class:"card"}, h("div",{class:"hd"}, h("h2",null,"By state")), st.length ? h("div",{class:"tablewrap"}, h("table",null, h("thead",null, h("tr",null, h("th",null,"State"), h("th",null,"Agents"), h("th",null,"Contacted"), h("th",null,"Replied"), h("th",null,"Reply rate"), h("th",null,"Territory"))), tb)) : h("div",{class:"empty"},"Reply rates by state appear once agents have been contacted.")));
 
     wrap.appendChild(h("div",{class:"grid2"}, reasonsCard(list), imoCard(list)));
@@ -3365,7 +3375,7 @@ var OBJECTIONS = [
       h("div",{class:"dtop"},
         h("button",{type:"button",class:"btn sm ghost","aria-label":"Previous agent",onclick:function(){ stepDrawer(-1); }}, icon("up")),
         h("button",{type:"button",class:"btn sm ghost","aria-label":"Next agent",onclick:function(){ stepDrawer(1); }}, icon("down")),
-        h("span",{class:"note"},"J / K to move"), h("span",{class:"sp"}),
+        h("span",{class:"note kbhint"},"J / K to move"), h("span",{class:"sp"}),
         A.state==="ready" ? h("button",{type:"button",class:"btn sm glow",disabled:!!S.ap.busy[p.id],onclick:function(){ enrichAsk(p); }}, icon("spark"), S.ap.busy[p.id] ? "Enriching…" : (p.ap && p.ap.at ? "Refresh from Apollo" : "Enrich with Apollo")) : null,
         h("button",{type:"button",class:"btn sm ghost","aria-label":"Close",onclick:closeDrawer}, icon("x"))),
       h("div",{class:"hero"}, avatar(p), h("div",{style:"min-width:0"}, h("h2",null,C.displayName(p)),
@@ -3598,7 +3608,7 @@ var OBJECTIONS = [
     ["rookie","experienced","leader"].forEach(function(k){ seg.appendChild(h("button",{type:"button","aria-pressed":scrTrack===k?"true":"false",onclick:function(){ scrTrack = k; renderView(true); }}, SCRIPTS[k].label)); });
     wrap.appendChild(h("div",{style:"display:flex;gap:14px;align-items:center;flex-wrap:wrap"}, seg, h("span",{class:"note",style:"flex:1;min-width:220px"}, SCRIPTS[scrTrack].who)));
     wrap.appendChild(h("div",{class:"note"},"Changes save as you type. Tags fill in per agent: {first} {stateName} {years} {company} · yours: {myName} {myPhone} {agency}. Your details live under Import & settings."));
-    var list = h("div",{class:"stagger",style:"display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:14px"});
+    var list = h("div",{class:"stagger",style:"display:grid;grid-template-columns:repeat(auto-fill,minmax(min(420px,100%),1fr));gap:14px"});
     var items = getTpls(scrTrack);
     items.forEach(function(t, i){
       var name = h("input",{class:"field",value:t.name||"","aria-label":"Template name"});
