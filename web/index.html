@@ -549,6 +549,13 @@ tbody tr.open{box-shadow:inset 2px 0 0 var(--gold)}
   .gate{padding:calc(20px + env(safe-area-inset-top)) 18px calc(20px + env(safe-area-inset-bottom))}
   .btn{height:40px} .btn.sm{height:34px}
   .grow-row{grid-template-columns:1fr 1fr}
+  .nosearch .search{display:none}
+  .toolbar > .field,.toolbar > select{flex:1 1 40%} .toolbar > label:not(.lbl){flex-basis:100%}
+  table.leads td:nth-child(6){font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .schip,.pill{white-space:nowrap;flex:none}
+  table.leads{table-layout:fixed} table.leads th:nth-child(1),table.leads td:nth-child(1){width:34px;padding-right:0} table.leads th:nth-child(4),table.leads td:nth-child(4){width:46px} table.leads th:nth-child(6),table.leads td:nth-child(6){width:118px}
+  table.leads .who{gap:9px} table.leads .who > div{min-width:0} table.leads .who .nm,table.leads .who .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  table.leads .avatar{width:30px;height:30px;font-size:11px}
 }
 @media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation:none!important;transition:none!important} }
 </style>
@@ -1576,10 +1583,11 @@ var OBJECTIONS = [
     $$(".nav").forEach(function(b){ if (b.getAttribute("data-view")===v) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
     $("#viewTitle").textContent = TITLES[v];
     $(".search").style.visibility = v==="prospects" ? "hidden" : "";
+    document.body.classList.toggle("nosearch", v==="prospects");
     renderView(false);
     $("#main").scrollTop = 0;
   }
-  $$(".nav").forEach(function(b){ b.addEventListener("click", function(){ location.hash = b.getAttribute("data-view"); }); });
+  $$(".nav[data-view]").forEach(function(b){ b.addEventListener("click", function(){ var v = b.getAttribute("data-view"); if (location.hash.replace("#","")===v){ document.body.classList.remove("sheet-open"); var mb = $("#moreBtn"); if (mb) mb.setAttribute("aria-expanded","false"); } location.hash = v; }); });
   window.addEventListener("hashchange", route);
   function render(){ $("#exBanner").hidden = !S.examples; refreshBadges(); renderView(false); }
   function renderView(soft){
