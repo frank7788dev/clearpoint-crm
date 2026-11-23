@@ -1475,21 +1475,64 @@ var OBJECTIONS = [
     var s = (await sb.auth.getSession()).data.session;
     if (s) afterAuth(); else showLogin();
   }
+  function pwMsg(e){
+    var m = String((e && (e.message || e.error_description)) || ""), c = String((e && e.code) || "");
+    if (/same_password|different from the old/i.test(c+m)) return "That's the same as your current password. Choose a new one.";
+    if (/weak_password|at least|should contain|characters/i.test(c+m)) return "That password is too weak. Use 8 or more characters with a mix of letters and numbers.";
+    if (/invalid login|invalid_credentials/i.test(c+m)) return "Your current password isn't right. Try again, or email yourself a reset link below.";
+    if (/rate|too many/i.test(c+m)) return "Too many tries. Wait a minute and try again.";
+    if (/network|fetch/i.test(m)) return "No internet connection. Try again when you're back online.";
+    return m || "That didn't work. Try again.";
+  }
   function newPassword(canCancel){
+    /* Signed in: confirm the current password first. That gives a fresh login, which Supabase needs before it
+       accepts a new password. From a reset email (canCancel false) the link itself is the proof. */
+    var signedIn = !!(canCancel && S.me && S.me.email);
+    var cur = h("input",{class:"field",id:"g_cur",type:"password",autocomplete:"current-password",placeholder:"Your current password"});
     var pw = h("input",{class:"field",id:"g_np",type:"password",autocomplete:"new-password",placeholder:"New password (8+ characters)"});
     var pw2 = h("input",{class:"field",id:"g_np2",type:"password",autocomplete:"new-password",placeholder:"Type it again"});
-    var err = h("div",{class:"gerr",role:"alert"});
-    gate([h("div",{class:"crest"}, h("img",{src:"brand/cpg-lockup.png",alt:"ClearPoint Global"})), h("h1",null,"Choose a new password"),
+    var code = h("input",{class:"field",id:"g_code",inputmode:"numeric",autocomplete:"one-time-code",placeholder:"6-digit code from your email"});
+    var codeRow = h("label",{class:"lbl",for:"g_code",hidden:true},"Code from your email", code);
+    var err = h("div",{class:"gerr",role:"alert"}), go = h("button",{type:"submit",class:"btn primary",style:"width:100%;height:46px"},"Save password");
+    var needCode = false;
+    async function save(){
+      var opts = {password:pw.value}; if (needCode) opts.nonce = code.value.trim();
+      var r = await sb.auth.updateUser(opts);
+      if (r.error && /reauth|nonce/i.test(String(r.error.code||"")+r.error.message) && !needCode){
+        var ra = await sb.auth.reauthenticate();
+        if (ra.error){ err.textContent = pwMsg(ra.error); return false; }
+        needCode = true; codeRow.hidden = false; code.focus();
+        err.textContent = "For your security, we emailed a 6-digit code to "+S.me.email+". Enter it above and press Save password again.";
+        return false;
+      }
+      if (r.error){ err.textContent = pwMsg(r.error); return false; }
+      return true;
+    }
+    gate([h("div",{class:"crest"}, h("img",{src:"brand/cpg-lockup.png",alt:"ClearPoint Global"})), h("h1",null,"Change your password"),
       h("div",{class:"gsub",style:"text-transform:none;letter-spacing:0;font-size:13px"}, S.me ? "For "+S.me.email : ""),
       h("form",{class:"form",onsubmit:async function(e){ e.preventDefault(); err.textContent = "";
-        if (pw.value.length < 8){ err.textContent = "Use at least 8 characters."; return; }
-        if (pw.value !== pw2.value){ err.textContent = "The two passwords don't match."; return; }
-        var r = await sb.auth.updateUser({password:pw.value}); if (r.error){ err.textContent = r.error.message; return; }
-        $("#gate").hidden = true; toast("Password changed. Use it next time you sign in."); if (!S.me) afterAuth(); }},
-        h("label",{class:"lbl",for:"g_np"},"New password", pw), h("label",{class:"lbl",for:"g_np2"},"Confirm new password", pw2),
-        h("button",{type:"submit",class:"btn primary",style:"width:100%;height:46px"},"Save password"), err),
-      canCancel ? h("div",{class:"glinks"}, h("button",{type:"button",class:"btn ghost",onclick:function(){ $("#gate").hidden = true; }},"Cancel")) : null]);
-    setTimeout(function(){ pw.focus(); }, 50);
+        if (signedIn && !cur.value){ err.textContent = "Enter your current password."; cur.focus(); return; }
+        if (pw.value.length < 8){ err.textContent = "Use at least 8 characters."; pw.focus(); return; }
+        if (pw.value !== pw2.value){ err.textContent = "The two new passwords don't match."; pw2.focus(); return; }
+        if (needCode && !/^\d{6}$/.test(code.value.trim())){ err.textContent = "Enter the 6-digit code from your email."; code.focus(); return; }
+        go.disabled = true; go.textContent = "Saving…";
+        try {
+          if (signedIn && !needCode){
+            var si = await sb.auth.signInWithPassword({email:S.me.email, password:cur.value});
+            if (si.error){ err.textContent = pwMsg(si.error); return; }
+          }
+          if (!(await save())) return;
+          $("#gate").hidden = true; toast("Password changed. Use it next time you sign in."); if (!S.me) afterAuth();
+        } catch(x){ err.textContent = pwMsg(x); }
+        finally { go.disabled = false; go.textContent = "Save password"; }
+      }},
+        signedIn ? h("label",{class:"lbl",for:"g_cur"},"Current password", cur) : null,
+        h("label",{class:"lbl",for:"g_np"},"New password", pw), h("label",{class:"lbl",for:"g_np2"},"Confirm new password", pw2), codeRow,
+        go, err),
+      h("div",{class:"glinks"},
+        signedIn ? h("button",{type:"button",class:"btn ghost",onclick:async function(){ var r = await sb.auth.resetPasswordForEmail(S.me.email, {redirectTo:APP_HOME}); err.textContent = r.error ? pwMsg(r.error) : "Forgot it? We emailed a reset link to "+S.me.email+". Open it on this device."; }},"Forgot current password") : null,
+        canCancel ? h("button",{type:"button",class:"btn ghost",onclick:function(){ $("#gate").hidden = true; }},"Cancel") : null)]);
+    setTimeout(function(){ (signedIn ? cur : pw).focus(); }, 50);
   }
 
   /* ================= filtering ================= */
